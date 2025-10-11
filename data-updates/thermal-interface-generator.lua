@@ -100,3 +100,4 @@ end
 
 --Finally, generate all the thermal interfaces.
 generate_thermal_interfaces(data.raw["assembling-machine"])
+generate_thermal_interfaces(data.raw["furnace"])
