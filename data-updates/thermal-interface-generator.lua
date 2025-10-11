@@ -1,28 +1,33 @@
----Heat interface connections
-  --connected
-    local HP_NS = {size = 64, filename = "__base__/graphics/entity/heat-pipe/heat-pipe-straight-vertical-1.png", scale = 0.5}
-    local HP_EW = {size = 64, filename = "__base__/graphics/entity/heat-pipe/heat-pipe-straight-horizontal-1.png", scale = 0.5}
-  --disconnected
-    local HP_N = {size = 64, filename = "__base__/graphics/entity/heat-pipe/heat-pipe-ending-down-1.png", scale = 0.5,shift = {0,-0.3}}
-    local HP_E = {size = 64, filename = "__base__/graphics/entity/heat-pipe/heat-pipe-ending-left-1.png", scale = 0.5,shift = {0.3,0}}
-    local HP_S = {size = 64, filename = "__base__/graphics/entity/heat-pipe/heat-pipe-ending-up-1.png", scale = 0.5,shift = {0,0.3}}
-    local HP_W = {size = 64, filename = "__base__/graphics/entity/heat-pipe/heat-pipe-ending-right-1.png", scale = 0.5,shift = {-0.3,0}}
-  --connected hot
-    local HP_NS_Hot = {size = 64, filename = "__base__/graphics/entity/heat-pipe/heated-straight-vertical-1.png", scale = 0.5}
-    local HP_EW_Hot = {size = 64, filename = "__base__/graphics/entity/heat-pipe/heated-straight-horizontal-1.png", scale = 0.5}
-  --disconnected hot
-    local HP_N_Hot = {size = 64, filename = "__base__/graphics/entity/heat-pipe/heated-ending-down-1.png", scale = 0.5,shift = {0,-0.3}}
-    local HP_E_Hot = {size = 64, filename = "__base__/graphics/entity/heat-pipe/heated-ending-left-1.png", scale = 0.5,shift = {0.3,0}}
-    local HP_S_Hot = {size = 64, filename = "__base__/graphics/entity/heat-pipe/heated-ending-up-1.png", scale = 0.5,shift = {0,0.3}}
-    local HP_W_Hot = {size = 64, filename = "__base__/graphics/entity/heat-pipe/heated-ending-right-1.png", scale = 0.5,shift = {-0.3,-0}}
-
-
-local function generate_thermal_interface_icons(machine) -- handles the creation of an entity icon for the editor gui.
+---Heat interface connection graphic definitions
+  local heat_pipe_connected = {--connected
+    {size = 64, filename = "__base__/graphics/entity/heat-pipe/heat-pipe-straight-vertical-1.png", scale = 0.5},
+    {size = 64, filename = "__base__/graphics/entity/heat-pipe/heat-pipe-straight-horizontal-1.png", scale = 0.5},
+    {size = 64, filename = "__base__/graphics/entity/heat-pipe/heat-pipe-straight-vertical-1.png", scale = 0.5},
+    {size = 64, filename = "__base__/graphics/entity/heat-pipe/heat-pipe-straight-horizontal-1.png", scale = 0.5},
+  }
+  local heat_pipe_disconnected = {--disconnected
+    {size = 64, filename = "__base__/graphics/entity/heat-pipe/heat-pipe-ending-down-1.png", scale = 0.5,shift = {0,-0.3}},
+    {size = 64, filename = "__base__/graphics/entity/heat-pipe/heat-pipe-ending-left-1.png", scale = 0.5,shift = {0.3,0}},
+    {size = 64, filename = "__base__/graphics/entity/heat-pipe/heat-pipe-ending-up-1.png", scale = 0.5,shift = {0,0.3}},
+    {size = 64, filename = "__base__/graphics/entity/heat-pipe/heat-pipe-ending-right-1.png", scale = 0.5,shift = {-0.3,0}},
+  }
+  local heat_pipe_glow_connected = {--connected hot
+    {size = 64, filename = "__base__/graphics/entity/heat-pipe/heated-straight-vertical-1.png", scale = 0.5},
+    {size = 64, filename = "__base__/graphics/entity/heat-pipe/heated-straight-horizontal-1.png", scale = 0.5},
+    {size = 64, filename = "__base__/graphics/entity/heat-pipe/heated-straight-vertical-1.png", scale = 0.5},
+    {size = 64, filename = "__base__/graphics/entity/heat-pipe/heated-straight-horizontal-1.png", scale = 0.5},
+  }
+  local heat_pipe_glow_disconnected = {--disconnected hot
+    {size = 64, filename = "__base__/graphics/entity/heat-pipe/heated-ending-down-1.png", scale = 0.5,shift = {0,-0.3}},
+    {size = 64, filename = "__base__/graphics/entity/heat-pipe/heated-ending-left-1.png", scale = 0.5,shift = {0.3,0}},
+    {size = 64, filename = "__base__/graphics/entity/heat-pipe/heated-ending-up-1.png", scale = 0.5,shift = {0,0.3}},
+    {size = 64, filename = "__base__/graphics/entity/heat-pipe/heated-ending-right-1.png", scale = 0.5,shift = {-0.3,-0}},
+  }
+local function generate_thermal_interface_icons(machine) --handles the creation of an entity icon for the editor gui.
   local icons = {{
       icon = "__base__/graphics/icons/signal/signal-fire.png",
       icon_size = 64,
     }}
-
   if machine.icon then
     table.insert(icons,{
       icon = machine.icon,
@@ -33,9 +38,7 @@ local function generate_thermal_interface_icons(machine) -- handles the creation
   elseif machine.icons then
     icons = util.combine_icons(icons, machine.icons, {scale = 0.5}, machine.icon_size)
   end
-
-  return icons
-end
+return icons end
 
 --sanity checks and error logging
   local function log_thermal_interface_error(string)
@@ -46,15 +49,56 @@ end
     if not machines then
       log_thermal_interface_error("there are no machines")
     return end
+  return true end
 
+  local function semifloor(number)
+  return math.floor(number*2)/2 end
 
-    return true
-  end
+  local function semiceil(number)
+  return math.ceil(number*2)/2 end
+
+--lets build our interface connections
+  local function generate_thermal_interface_connections(machine)
+    if not machine.thermal_system_connections then --default to this if no connections are defined.
+      local machine_box = machine.collision_box
+      local x_max = semifloor(machine_box[2][1])
+      local x_min = semiceil(machine_box[1][1])
+      local y_max = semifloor(machine_box[2][2])
+      local y_min = semiceil(machine_box[1][2])
+      connections = {
+        { position = {x_min, y_min}, direction = 0 },
+        { position = {x_max, y_min}, direction = 0 },
+        { position = {x_max, y_min}, direction = 4 },
+        { position = {x_max, y_max}, direction = 4 },
+        { position = {x_min, y_max}, direction = 8 },
+        { position = {x_max, y_max}, direction = 8 },
+        { position = {x_min, y_min}, direction = 12 },
+        { position = {x_min, y_max}, direction = 12 },
+      }
+    else
+      connections = machine.thermal_system_connections
+    end
+  return connections end
+
+  local function generate_heat_patches_from_connections (connections,interface)
+    local interface = interface
+    interface.connection_patches_connected = {}
+    interface.connection_patches_disconnected = {}
+    interface.heat_connection_patches_connected = {}
+    interface.heat_connection_patches_disconnected = {}
+    for _, connection in pairs(connections) do
+      local direction = connection.direction/4+1
+      table.insert(interface.connection_patches_connected, heat_pipe_connected[direction])
+      table.insert(interface.connection_patches_disconnected, heat_pipe_disconnected[direction])
+      table.insert(interface.heat_connection_patches_connected, heat_pipe_glow_connected[direction])
+      table.insert(interface.heat_connection_patches_disconnected, heat_pipe_glow_disconnected[direction])
+    end
+  return interface end
+
 
 --generate a thermal interfaces, and add it to data.raw
   local function generate_thermal_interface(machine)
     if machine.thermal_system ~= true then return end -- Check if machine is opted into the thermal system.
-
     local interface = {--machine interface template
       type = "reactor",
       name = machine.name .. "-thermal-interface",
@@ -74,21 +118,14 @@ end
       },
       heat_buffer = {
         max_temperature = 1000,
-        minimum_glow_temperature = 1,
+        minimum_glow_temperature = 350,
         specific_heat = "1MJ",--This will be proportioned to machine size I think.
         max_transfer = "100TW",--Ultimately, this will be limited more by connections than anything else.
-        connections = {--we must get connections some smarter way, but this will do.
-          { position = {0, -1}, direction = defines.direction.north },
-          { position = {1, 0}, direction = defines.direction.east },
-          { position = {0, 1}, direction = defines.direction.south },
-          { position = {-1, 0}, direction = defines.direction.west },
-        },
+        connections = machine.thermal_system_connections or generate_thermal_interface_connections(machine)--we shall connect the world.
       },
-      connection_patches_connected = { HP_NS, HP_EW, HP_NS, HP_EW },
-      connection_patches_disconnected = { HP_N, HP_E, HP_S, HP_W },
-      heat_connection_patches_connected ={ HP_NS_Hot, HP_EW_Hot, HP_NS_Hot, HP_EW_Hot },--I should look into the fact that heat connections are identical to regular ones
-      heat_connection_patches_disconnected ={ HP_N_Hot, HP_E_Hot, HP_S_Hot, HP_W_Hot },
     }
+    generate_heat_patches_from_connections(interface.heat_buffer.connections,interface)
+
     data:extend({interface})
   end
 
