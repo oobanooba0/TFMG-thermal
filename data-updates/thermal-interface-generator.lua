@@ -47,6 +47,7 @@ end
       log_thermal_interface_error("there are no machines")
     return end
 
+
     return true
   end
 
@@ -66,6 +67,7 @@ end
       selection_priority = 1, --mostly for debug in editors.
       selectable_in_game = false,
       allow_copy_paste = false,
+      hidden = true,
       consumption = "1W", -- this is actually irrelevant, but its required by the reactor prototype.
       energy_source = { --also irrelevant, but must be defined.
         type = "void",
