@@ -1,0 +1,7 @@
+data.raw["assembling-machine"]["assembling-machine-1"].thermal_system = true
+data.raw["assembling-machine"]["assembling-machine-2"].thermal_system = true
+data.raw["assembling-machine"]["assembling-machine-3"].thermal_system = true
+data.raw["assembling-machine"]["chemical-plant"].thermal_system = true
+data.raw["assembling-machine"]["centrifuge"].thermal_system = true
+data.raw["assembling-machine"]["oil-refinery"].thermal_system = true
+data.raw["furnace"]["electric-furnace"].thermal_system = true

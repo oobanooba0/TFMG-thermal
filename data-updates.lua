@@ -1,0 +1,1 @@
+require("data-updates.thermal-interface-generator")
