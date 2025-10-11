@@ -23,6 +23,7 @@
     {size = 64, filename = "__base__/graphics/entity/heat-pipe/heated-ending-up-1.png", scale = 0.5,shift = {0,0.3}},
     {size = 64, filename = "__base__/graphics/entity/heat-pipe/heated-ending-right-1.png", scale = 0.5,shift = {-0.3,-0}},
   }
+
 local function generate_thermal_interface_icons(machine) --handles the creation of an entity icon for the editor gui.
   local icons = {{
       icon = "__base__/graphics/icons/signal/signal-fire.png",
