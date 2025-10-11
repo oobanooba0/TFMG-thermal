@@ -81,7 +81,7 @@ return icons end
     end
   return connections end
 
-  local function generate_heat_patches_from_connections (connections,interface)
+  local function generate_heat_patches_from_connections (connections,interface)--Because neither you, nor I want to do this every time
     local interface = interface
     interface.connection_patches_connected = {}
     interface.connection_patches_disconnected = {}
@@ -104,7 +104,7 @@ return icons end
       type = "reactor",
       name = machine.name .. "-thermal-interface",
       localised_name = {"entity-name.thermal-interface", machine.localised_name or {"entity-name."..machine.name}},
-      order = "y",
+      order = "y"..machine.type,
       icons = generate_thermal_interface_icons(machine),
       flags = {"placeable-neutral", "player-creation","not-on-map","not-blueprintable","not-deconstructable","no-automated-item-insertion","no-automated-item-removal"},
       collision_mask = {layers ={}}, --the interface does not concern itself with the plight of lesser entities.
@@ -114,7 +114,7 @@ return icons end
       allow_copy_paste = false,
       hidden = true,
       consumption = "1W", -- this is actually irrelevant, but its required by the reactor prototype.
-      energy_source = { --also irrelevant, but must be defined.
+      energy_source = { --also irrelevant, since interfaces are disabled by script at birth, but wube demands it.
         type = "void",
       },
       heat_buffer = {
@@ -126,8 +126,20 @@ return icons end
       },
     }
     generate_heat_patches_from_connections(interface.heat_buffer.connections,interface)
-
-    data:extend({interface})
+    default_temperature = machine.thermal_system_max_working_temperature
+    local interface_data = {
+      type = "mod-data",
+      data_type = "TFMG-thermal.thermal-interface",
+      name = "TFMG-thermal-"..machine.name,
+      data = {
+        name = machine.name,
+        max_working_temperature = machine.thermal_system_max_working_temperature or 250,
+        max_safe_temperature = machine.thermal_system_max_safe_temperature or 350,
+        heat_output = 1,--this will be in MW
+        default_temperature = machine.thermal_system_default_temperature or 240,
+      }
+    }
+    data:extend({interface,interface_data})
   end
 
   ---go through all machines and run generate_thermal_interface for each of them.

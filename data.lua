@@ -1,2 +1,2 @@
-require("prototypes.recipes")
+require("prototypes.prototypes")
 require("configs.test-config")

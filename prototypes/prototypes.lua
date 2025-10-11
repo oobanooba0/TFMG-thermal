@@ -12,5 +12,5 @@ data:extend({
     enabled = true,
     ingredients = {},
     results = {},
-  }
+  },
 })
