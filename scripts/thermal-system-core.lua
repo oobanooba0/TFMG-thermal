@@ -62,11 +62,9 @@ local thermal_system_core = {}
     local update_budget = 1 -- define how many machines to update, per category
     local delta_time = 1
     local delta = table_size(table)/update_budget
-    if delta > 1 then
+    if delta > 1 then--if update budget is bigger than table size, you will get a delta time of 1, but if table size is larger than budget, then delta time increases.
       delta_time = delta
     end
-    game.print(table_size(table))
-     --if update budget is bigger than table size, you will get a delta time of 1, but if table size is larger than budget, then delta time increases.
     storage.table_index[type] = flib_table.for_n_of(
       table,storage.table_index[type], update_budget,
       function(v)
