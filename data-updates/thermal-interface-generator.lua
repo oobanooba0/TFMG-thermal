@@ -60,7 +60,7 @@ return icons end
 
 --lets build our interface connections
   local function generate_thermal_interface_connections(machine)
-    if not machine.thermal_system_connections then --default to this if no connections are defined.
+    if not machine.thermal_system.connections then --default to this if no connections are defined.
       local machine_box = machine.collision_box
       local x_max = semifloor(machine_box[2][1])
       local x_min = semiceil(machine_box[1][1])
@@ -77,7 +77,7 @@ return icons end
         { position = {x_min, y_max}, direction = 12 },
       }
     else
-      connections = machine.thermal_system_connections
+      connections = machine.thermal_system.connections
     end
   return connections end
 
@@ -99,7 +99,7 @@ return icons end
 
 --generate a thermal interfaces, and add it to data.raw
   local function generate_thermal_interface(machine)
-    if machine.thermal_system ~= true then return end -- Check if machine is opted into the thermal system.
+    if not machine.thermal_system then return end -- Check if machine is opted into the thermal system.
     local interface = {--machine interface template
       type = "reactor",
       name = machine.name .. "-thermal-interface",
@@ -122,7 +122,7 @@ return icons end
         minimum_glow_temperature = 350,
         specific_heat = "1MJ",--This will be proportioned to machine size I think.
         max_transfer = "100TW",--Ultimately, this will be limited more by connections than anything else.
-        connections = machine.thermal_system_connections or generate_thermal_interface_connections(machine)--we shall connect the world.
+        connections = machine.thermal_system.connections or generate_thermal_interface_connections(machine)--we shall connect the world.
       },
     }
     generate_heat_patches_from_connections(interface.heat_buffer.connections,interface)
@@ -133,10 +133,10 @@ return icons end
       name = "TFMG-thermal-"..machine.name,
       data = {
         name = machine.name,
-        max_working_temperature = machine.thermal_system_max_working_temperature or 250,
-        max_safe_temperature = machine.thermal_system_max_safe_temperature or 350,
+        max_working_temperature = machine.thermal_system.max_working_temperature or 250,
+        max_safe_temperature = machine.thermal_system.max_safe_temperature or 350,
         heat_output = 1,--this will be in MW
-        default_temperature = machine.thermal_system_default_temperature or 240,
+        default_temperature = machine.thermal_system.default_temperature or 240,
       }
     }
     data:extend({interface,interface_data})
