@@ -25,7 +25,7 @@
   }
 
 local function generate_thermal_interface_icons(machine) --handles the creation of an entity icon for the editor gui.
-  local icons = {{
+  local icons = {{--this is icon we're gonna use as a base.
       icon = "__base__/graphics/icons/signal/signal-fire.png",
       icon_size = 64,
     }}
@@ -34,7 +34,6 @@ local function generate_thermal_interface_icons(machine) --handles the creation 
       icon = machine.icon,
       icon_size = (machine.icon_size or defines.default_icon_size),
       scale = 16.0 / (machine.icon_size or defines.default_icon_size), -- scale = 0.5 * 32 / icon_size simplified
-      shift = fluid_icon_shift
     })
   elseif machine.icons then
     icons = util.combine_icons(icons, machine.icons, {scale = 0.5}, machine.icon_size)
@@ -52,21 +51,23 @@ return icons end
     return end
   return true end
 
-  local function semifloor(number)
+  local function semifloor(number)--Round down number to the nearest 0.5
   return math.floor(number*2)/2 end
 
   local function semiceil(number)
-  return math.ceil(number*2)/2 end
+  return math.ceil(number*2)/2 end--Round up number to the nearest 0.5
 
 --lets build our interface connections
   local function generate_thermal_interface_connections(machine)
     if not machine.thermal_system.connections then --default to this if no connections are defined.
       local machine_box = machine.collision_box
+      --We're gonna find the coordinates of the x most, and y most tiles of the collision box.
       local x_max = semifloor(machine_box[2][1])
       local x_min = semiceil(machine_box[1][1])
       local y_max = semifloor(machine_box[2][2])
       local y_min = semiceil(machine_box[1][2])
-      connections = {
+      
+      connections = {--conceivably, the default layout can be pretty much anything, but this setup should work with any machine shape that isnt 1x1. Remember to handle 1x1 edge case later.
         { position = {x_min, y_min}, direction = 0 },
         { position = {x_max, y_min}, direction = 0 },
         { position = {x_max, y_min}, direction = 4 },
@@ -81,14 +82,16 @@ return icons end
     end
   return connections end
 
-  local function generate_heat_patches_from_connections (connections,interface)--Because neither you, nor I want to do this every time
+  local function generate_heat_patches_from_connections (connections,interface)--Because neither you, nor I want to do this every time.
     local interface = interface
+    --setting up the connection patch tables.
     interface.connection_patches_connected = {}
     interface.connection_patches_disconnected = {}
     interface.heat_connection_patches_connected = {}
     interface.heat_connection_patches_disconnected = {}
+
     for _, connection in pairs(connections) do
-      local direction = connection.direction/4+1
+      local direction = connection.direction/4+1--this is goofy, but it works. basically we're just converting direction (0,4,8,12 into 1,2,3,4, which corresponds to an index within a predefined table of heat pipe textures.)
       table.insert(interface.connection_patches_connected, heat_pipe_connected[direction])
       table.insert(interface.connection_patches_disconnected, heat_pipe_disconnected[direction])
       table.insert(interface.heat_connection_patches_connected, heat_pipe_glow_connected[direction])
@@ -118,7 +121,7 @@ return icons end
         type = "void",
       },
       heat_buffer = {
-        max_temperature = 1000,
+        max_temperature = 1000,--These two values just match heat pipes, and should be fine in pretty much all sane use cases.
         minimum_glow_temperature = 350,
         specific_heat = "1MJ",--This will be proportioned to machine size I think.
         max_transfer = "100TW",--Ultimately, this will be limited more by connections than anything else.
