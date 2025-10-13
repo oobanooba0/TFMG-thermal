@@ -68,19 +68,18 @@ script.on_event(
     thermal_system_core.handle_build_event(event)
   end
 )
---script.on_event(
---  defines.events.on_player_rotated_entity,
---  function(event)
---    thermal_system_core.handle_rotate_event(event)
---  end
---)
---script.on_event(
---  defines.events.on_player_flipped_entity,
---  function(event)
---    thermal_system_core.handle_rotate_event(event)
---  end
---)
-
+script.on_event(
+  defines.events.on_player_rotated_entity,
+  function(event)
+    thermal_system_core.handle_rotate_event(event)
+  end
+)
+script.on_event(
+  defines.events.on_player_flipped_entity,
+  function(event)
+    thermal_system_core.handle_rotate_event(event)
+  end
+)
 script.on_event(
 	defines.events.on_object_destroyed,
 	function(event)

@@ -2,20 +2,30 @@ local flib_table = require("__flib__/table")
 
 local thermal_system_core = {}
 --Compound entity handlers
-  function thermal_system_core.handle_build_event(event) -- create machines create machines create machines create machines create machines create machines create machines create
-    local machine = event.entity
+  function thermal_system_core.handle_build_event(event,entity,temperature) -- create machines create machines create machines create machines create machines create machines create machines create
+    local machine = entity or event.entity
+    local direction = machine.direction/4+1
     local _reg_number, unit_number, _type = script.register_on_object_destroyed(machine)
     local thermal_prototype = prototypes.mod_data["TFMG-thermal-"..machine.name].data
-    game.print(serpent.block(thermal_prototype))
-  	local interface = machine.surface.create_entity({name = machine.name .. "-thermal-interface",position = machine.position, force = machine.force })
+  	local interface = machine.surface.create_entity({name = machine.name .. "-thermal-interface"..direction,position = machine.position, force = machine.force })
   	interface.disabled_by_script = true
-  	interface.temperature = thermal_prototype.default_temperature
+  	interface.temperature = temperature or thermal_prototype.default_temperature
   	interface.destructible = false
   	table.insert(storage.interfaces[machine.name], unit_number, { machine = machine, interface = interface })
     if storage.registered_entities == nil then
       storage.registered_entities = {}
     end
     table.insert(storage.registered_entities,_reg_number,machine.name)--we need this to be able to recall information about the machine when destorying it
+  end
+  
+  function thermal_system_core.handle_rotate_event(event)
+    machine = event.entity.name
+    if storage.interfaces[event.entity.name] == nil then return end -- since we cant 
+  	local v = storage.interfaces[event.entity.name][event.entity.unit_number]
+  	local temperature = v.interface.temperature
+  	v.interface.destroy()
+  	storage.interfaces[event.entity.name][event.entity.unit_number] = nil
+  	thermal_system_core.handle_build_event(nil,v.machine,temperature)
   end
 
   function thermal_system_core.handle_destroy_event(event)
