@@ -67,17 +67,24 @@ return icons end
       local x_min = semiceil(machine_box[1][1])
       local y_max = semifloor(machine_box[2][2])
       local y_min = semiceil(machine_box[1][2])
-      
+
       connections = {--conceivably, the default layout can be pretty much anything, but this setup should work with any machine shape that isnt 1x1. Remember to handle 1x1 edge case later.
         { position = {x_min, y_min}, direction = 0 },
-        { position = {x_max, y_min}, direction = 0 },
         { position = {x_max, y_min}, direction = 4 },
-        { position = {x_max, y_max}, direction = 4 },
-        { position = {x_min, y_max}, direction = 8 },
         { position = {x_max, y_max}, direction = 8 },
-        { position = {x_min, y_min}, direction = 12 },
         { position = {x_min, y_max}, direction = 12 },
       }
+
+      if x_max - x_min > 0 then
+      table.insert(connections,{ position = {x_max, y_min}, direction = 0 })
+      table.insert(connections,{ position = {x_min, y_max}, direction = 8 })
+      end
+
+      if y_max - y_min > 0 then
+      table.insert(connections,{ position = {x_max, y_max}, direction = 4 })
+      table.insert(connections,{ position = {x_min, y_min}, direction = 12 })
+      end
+
     else connections = machine.thermal_system.connections end
   return connections end
 
@@ -85,15 +92,26 @@ return icons end
     local rotated_coordinate = {-coordinate[2],coordinate[1]}
   return rotated_coordinate end
 
-  local function rotate_connection(connection)
+  local function mirror(coordinate)
+    local mirrored_coordinate = {-coordinate[1],coordinate[2]}
+  return mirrored_coordinate end
+
+  local function rotate_connection(connection) --rotate a connection 90 degrees
     local coordinate = connection.position
     local rotated_coordinate = rotate(coordinate)
     local direction = connection.direction + 4
     if direction >= 16 then direction = direction - 16 end
-
     local rotated_connection = { position = rotated_coordinate, direction = direction}
-
   return rotated_connection end
+
+  local function mirror_connection(connection) --Mirror a connection horizontally
+    local coordinate = connection.position
+    local mirrored_coordinate = mirror(coordinate)
+    local direction = connection.direction
+    if direction == 4 then direction = 12--we only need to flip the west and east connections, north and south stay the same
+    elseif direction == 12 then direction = 4 end
+    local mirrored_connection = { position = mirrored_coordinate, direction = direction}
+  return mirrored_connection end
 
   local function rotate_connections(connections)
     local rotated_connections = {}
@@ -102,33 +120,48 @@ return icons end
     end
   return rotated_connections end
 
-  local function mirror_connections(connections)
-  end
+    local function mirror_connections(connections)
+    local mirrored_connections = {}
+    for name, connection in pairs(connections) do
+      table.insert(mirrored_connections, mirror_connection(connection))
+    end
+  return mirrored_connections end
 
   local function generate_thermal_interface_connection_set(machine)
     local connections = generate_thermal_interface_connections(machine)
     local connection_set = {}
-    for i = 1, 4 do --speeeen
-      table.insert(connection_set, connections) -- start by getting the north set and putting it in our table on index 1
-      connections = rotate_connections(connections)
+    for i = 1, 2 do
+      for i = 1, 4 do --speeeen
+        table.insert(connection_set, connections) -- start by getting the north set and putting it in our table on index 1
+        connections = rotate_connections(connections)
+      end
+    connections = mirror_connections(connections)--do a flip
     end
   return connection_set end
 
-  local function rotate_collision_box(collision_box)--wheeeee
+  local function rotate_collision_box(collision_box)--my mind is a machine that turns
     local rotated_collision_box = {
      {-collision_box[2][2],collision_box[1][1]},
      {-collision_box[1][2],collision_box[2][1]},
     }
   return rotated_collision_box end
 
+  local function mirror_collision_box(collision_box)--wheeeee
+    local rotated_collision_box = {
+     {-collision_box[2][1],collision_box[1][2]},
+     {-collision_box[1][1],collision_box[2][2]},
+    }
+  return rotated_collision_box end
+
   local function generate_thermal_interface_collision_box_set(machine)
-
-
     local collision_box_set = {}
     local collision_box = machine.collision_box
-    for i = 1, 4 do --speeeen
-      table.insert(collision_box_set, collision_box) -- start by getting the north set and putting it in our table on index 1
-      collision_box = rotate_collision_box(collision_box)
+    for i = 1, 2 do 
+      for i = 1, 4 do --speeeen
+        table.insert(collision_box_set, collision_box) -- start by getting the north set and putting it in our table on index 1
+        collision_box = rotate_collision_box(collision_box)
+      end
+      mirror_collision_box(collision_box)
     end
   return collision_box_set end
 

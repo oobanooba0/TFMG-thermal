@@ -15,23 +15,23 @@ for name, machine in pairs(data.raw["beacon"]) do
 end
 
 --assembling machine 1
-  local ass1 =data.raw["assembling-machine"]["assembling-machine-1"]
-  ass1.thermal_system = {
+  local ass3 =data.raw["assembling-machine"]["assembling-machine-3"]
+  ass3.thermal_system = {
     connections = {
-      { position = {0, -1}, direction = defines.direction.north },
-      { position = {1, 0}, direction = defines.direction.east },
-      { position = {0, 1}, direction = defines.direction.south },
-      { position = {-1, 0}, direction = defines.direction.west },
+      { position = {-1, -1}, direction = defines.direction.north },
+      { position = {1, -1}, direction = defines.direction.east },
+      { position = {1, 1}, direction = defines.direction.south },
+      { position = {-1, 1}, direction = defines.direction.west },
     },
     max_safe_temperature = 500,
   }
 --recylers goofy ass fucking layout
-  local piss =data.raw["furnace"]["recycler"]
-  piss.thermal_system = {
-    connections = {
-      { position = {0.5, -1.5}, direction = defines.direction.north },
-      { position = {-0.5, -0.5}, direction = defines.direction.north },
-      { position = {0.5, 1.5}, direction = defines.direction.south },
-      { position = {-0.5, 0.5}, direction = defines.direction.west },
-    },
-  }
+--  local piss =data.raw["furnace"]["recycler"]
+--  piss.thermal_system = {
+--    connections = {
+--      { position = {0.5, -1.5}, direction = defines.direction.north },
+--      { position = {-0.5, -0.5}, direction = defines.direction.north },
+--      { position = {0.5, 1.5}, direction = defines.direction.south },
+--      { position = {-0.5, 0.5}, direction = defines.direction.west },
+--    },
+--  }

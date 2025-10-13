@@ -5,6 +5,7 @@ local thermal_system_core = {}
   function thermal_system_core.handle_build_event(event,entity,temperature) -- create machines create machines create machines create machines create machines create machines create machines create
     local machine = entity or event.entity
     local direction = machine.direction/4+1
+    if machine.mirroring == true then direction = direction + 4 end 
     local _reg_number, unit_number, _type = script.register_on_object_destroyed(machine)
     local thermal_prototype = prototypes.mod_data["TFMG-thermal-"..machine.name].data
   	local interface = machine.surface.create_entity({name = machine.name .. "-thermal-interface"..direction,position = machine.position, force = machine.force })
