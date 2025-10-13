@@ -7,6 +7,8 @@ data.raw["furnace"]["electric-furnace"].thermal_system = {}
 data.raw["furnace"]["steel-furnace"].thermal_system = {}
 data.raw["furnace"]["stone-furnace"].thermal_system = {}
 data.raw["furnace"]["stone-furnace"].thermal_system = {}
+data.raw["lab"]["lab"].thermal_system = {}
+data.raw["beacon"]["beacon"].thermal_system = {}
 
 --assembling machine 1
   local ass1 =data.raw["assembling-machine"]["assembling-machine-1"]

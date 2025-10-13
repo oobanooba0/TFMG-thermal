@@ -6,6 +6,7 @@ local thermal_system_core = {}
     local machine = event.entity
     local _reg_number, unit_number, _type = script.register_on_object_destroyed(machine)
     local thermal_prototype = prototypes.mod_data["TFMG-thermal-"..machine.name].data
+    game.print(serpent.block(thermal_prototype))
   	local interface = machine.surface.create_entity({name = machine.name .. "-thermal-interface",position = machine.position, force = machine.force })
   	interface.disabled_by_script = true
   	interface.temperature = thermal_prototype.default_temperature
@@ -27,13 +28,12 @@ local thermal_system_core = {}
      end
   end
 
-  function thermal_system_core.thermal_update_machine(v,heat_output,max_working_temp,max_safe_temp,delta_time)--Update an individual machine
+  function thermal_system_core.thermal_update_machine(v,base_temperature_increase_per_tick,max_working_temp,max_safe_temp,delta_time)--Update an individual machine
     if v.machine.valid == false then return end --If the machine isnt valid, don't run the script.
 		local temperature = v.interface.temperature
 		if v.machine.status == 1 then --if the machine is working, heat it up.
-			v.interface.temperature = temperature + (delta_time*heat_output*(1 + v.machine.consumption_bonus))--the heat output of a machine is precalculated back in prototype generation to make calculations here as simple as possible.
+			v.interface.temperature = temperature + (delta_time*base_temperature_increase_per_tick*(1 + v.machine.consumption_bonus))--This is the equation of doom. this is 90% of this mods performance cost.
 		end
-
 		if temperature >= max_safe_temp then--KILL KILL KILL KILL
 			v.machine.disabled_by_script = true
 			v.machine.custom_status = {
@@ -55,7 +55,7 @@ local thermal_system_core = {}
 
   local function thermal_update_category(type,table)--Update a whole category
     local thermal_prototype = prototypes.mod_data["TFMG-thermal-"..type].data
-    local heat_output = thermal_prototype.heat_output
+    local base_temperature_increase_per_tick = thermal_prototype.base_temperature_increase_per_tick --Precalculation rules.
     local max_working_temp = thermal_prototype.max_working_temperature
     local max_safe_temp = thermal_prototype.max_safe_temperature
 
@@ -68,7 +68,7 @@ local thermal_system_core = {}
     storage.table_index[type] = flib_table.for_n_of(
       table,storage.table_index[type], update_budget,
       function(v)
-        thermal_system_core.thermal_update_machine(v,heat_output,max_working_temp,max_safe_temp,delta_time)
+        thermal_system_core.thermal_update_machine(v,base_temperature_increase_per_tick,max_working_temp,max_safe_temp,delta_time)
       end
     )
   end
