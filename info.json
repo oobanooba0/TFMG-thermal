@@ -6,7 +6,8 @@
   "factorio_version": "2.0",
   "dependencies": [
     "base >= 2.0.69",
-    "flib >= 0.16.3"
+    "flib >= 0.16.3",
+    "?space-age >= 2.0.66"
   ],
   "description": "This mod is a library for The factory must grow, containing all the code relevant to the thermal system. This mod can be used by other mods to implement the thermal system into the game."
 }

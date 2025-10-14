@@ -9,10 +9,15 @@ local function build_thermal_entity_filter()--set the build event filters. This 
       {
         filter = "name",
         mode = "or",
-        name =  machine.data.name,
+        name =  machine.data.name
       })
     end
   end
+  if next(filters) == nil then
+    script.on_event(defines.events.on_built_entity,nil)
+    script.on_event(defines.events.on_robot_built_entity,nil)
+    script.on_event(defines.events.on_space_platform_built_entity,nil)
+  return end
   script.set_event_filter(defines.events.on_built_entity,filters)
   script.set_event_filter(defines.events.on_robot_built_entity,filters)
   script.set_event_filter(defines.events.on_space_platform_built_entity,filters)
@@ -54,6 +59,7 @@ script.on_event(
   defines.events.on_built_entity,
   function(event)
     thermal_system_core.handle_build_event(event)
+    
   end
 )
 script.on_event(
