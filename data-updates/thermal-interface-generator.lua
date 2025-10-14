@@ -193,6 +193,45 @@ return icons end
     local area = (x_max-x_min)*(y_max-y_min)
   return area end
 
+  local function surface_condition_compare(surface,conditions)
+  if conditions == nil then return true end
+    for _ , condition in pairs(conditions) do
+      local surface_condition_value = surface.surface_properties[condition.property] or data.raw["surface-property"][condition.property].default_value
+      if condition.min > surface_condition_value or surface_condition_value > condition.max then return false end
+    end
+  return true end
+
+  local function thermal_system_locations(machine)
+    local locations = ""
+    local location_passes = 0
+    local locations_listed = 0
+    local conditions = machine.thermal_system.surface_conditions
+    if surface_condition_compare(data.raw["surface"]["space-platform"],conditions) == true then
+      locations = locations.."[item=space-platform-foundation]"
+      location_passes = location_passes + 1
+      locations_listed = locations_listed + 1
+    end
+    for _ , surface in pairs(data.raw["planet"]) do
+      if surface_condition_compare(surface,conditions) == true then
+        location_passes = location_passes + 1
+        locations_listed = locations_listed + 1
+      end
+    end
+    if table_size(data.raw["planet"]) + 1 == location_passes then
+      locations = {"thermal-system.all-locations"}
+      return locations end
+    for _ , surface in pairs(data.raw["planet"]) do
+      if surface_condition_compare(surface,conditions) == true then
+        locations2 = locations.."[planet="..surface.name.."]"
+        if string.len(locations2) >= 200 then 
+        return locations.."+"..location_passes-locations_listed.."more" end
+        locations = locations2
+      end
+    end
+
+    
+  return locations end
+
 --generate a thermal interfaces, and add it to data.raw
   local function generate_thermal_interface(machine)
     if not machine.thermal_system then return end -- Check if machine is opted into the thermal system.
@@ -226,12 +265,15 @@ return icons end
           connections = connections--we shall connect the world.
         },
       }
+      if feature_flags["space_travel"] then surface_conditions = machine.thermal_system.surface_conditions end
       generate_heat_patches_from_connections(interface.heat_buffer.connections,interface)
 
       data:extend({interface})
     end
     
     local heat_ratio = machine.thermal_system.heat_ratio or 0.5
+    local max_working_temperature = machine.thermal_system.max_working_temperature or 250
+    local max_safe_temperature = machine.thermal_system.max_safe_temperature or 350
     local energy_usage_per_tick = util.parse_energy(machine.energy_usage) -- in joules
     local base_heat_output = energy_usage_per_tick*heat_ratio*60--in W
     local base_temperature_increase_per_tick = (energy_usage_per_tick*heat_ratio)/(specific_heat)--precalculate the per tick base heat output of the machine. That way we don't need to calculate it in runtime.
@@ -243,8 +285,8 @@ return icons end
       name = "TFMG-thermal-"..machine.name,
       data = {
         name = machine.name,
-        max_working_temperature = machine.thermal_system.max_working_temperature or 250,
-        max_safe_temperature = machine.thermal_system.max_safe_temperature or 350,
+        max_working_temperature = max_working_temperature,
+        max_safe_temperature = max_safe_temperature,
         base_temperature_increase_per_tick = base_temperature_increase_per_tick,--this is in degrees per tick.
         base_heat_output = base_heat_output,
         heat_ratio = heat_ratio,
@@ -255,6 +297,31 @@ return icons end
       }
     }
     data:extend({machine_data})
+
+    -- now add our custom tooltips
+    if not machine.custom_tooltip_fields then machine.custom_tooltip_fields = {} end
+    table.insert(machine.custom_tooltip_fields,{
+      name = {"thermal-system.max-temperature"},
+      value = {"thermal-system.machine-max-temperature",tostring(max_working_temperature)},
+      order = 252,
+    })
+    table.insert(machine.custom_tooltip_fields,{
+      name = {"thermal-system.max-safe-temperature"},
+      value = {"thermal-system.machine-max-safe-temperature",tostring(max_safe_temperature)},
+      order = 253,
+    })
+    table.insert(machine.custom_tooltip_fields,{
+      name = {"thermal-system.efficiency"},
+      value = {"thermal-system.machine-efficiency",tostring(heat_ratio)},
+      order = 254,
+    })
+    if feature_flags["space_travel"] then
+      table.insert(machine.custom_tooltip_fields,{
+        name = {"thermal-system.thermal-locations"},
+        value = thermal_system_locations(machine),
+        order = 255,
+      })
+    end
   end
 
   ---go through all machines and run generate_thermal_interface for each of them.

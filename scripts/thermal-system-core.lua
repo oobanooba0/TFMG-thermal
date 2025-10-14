@@ -1,10 +1,26 @@
 local flib_table = require("__flib__/table")
-
 local thermal_system_core = {}
+
+function thermal_system_core.surface_condition_compare(surface,conditions)
+  if conditions == nil then return true end
+    for _ , condition in pairs(conditions) do
+      local surface_condition_value = surface.get_property(prototypes.surface_property[condition.property])
+      if condition.min > surface_condition_value or surface_condition_value > condition.max then return false end
+    end
+  return true end
+
 --Compound entity handlers
   function thermal_system_core.handle_build_event(event,entity,temperature) -- create machines create machines create machines create machines create machines create machines create machines create
+    --gather important data
     local machine = entity or event.entity
+    local surface = machine.surface
     local direction = machine.direction/4+1
+    --Deal with surface conditions
+    local interface_prototype = prototypes.entity[machine.name .. "-thermal-interface"..direction]
+    local conditions = interface_prototype.surface_conditions
+
+    if thermal_system_core.surface_condition_compare(surface,conditions) == false then return end --You shall not pass
+
     if machine.mirroring == true then direction = direction + 4 end 
     local _reg_number, unit_number, _type = script.register_on_object_destroyed(machine)
     local thermal_prototype = prototypes.mod_data["TFMG-thermal-"..machine.name].data
@@ -30,7 +46,9 @@ local thermal_system_core = {}
   end
 
   function thermal_system_core.handle_destroy_event(event)
+    if storage.registered_entities == nil then return end
     local machine = storage.registered_entities[event.registration_number]--recall what kind of machine we destroyed
+    if machine == nil then game.print("tried to destroy unregistered machine") return end
     storage.registered_entities[event.registration_number] = nil --Clear the entry, as its irrelevant now
   	if storage.interfaces[machine][event.useful_id] ~= nil then
   		local entry = storage.interfaces[machine][event.useful_id]
