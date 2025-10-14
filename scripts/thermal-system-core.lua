@@ -48,7 +48,7 @@ function thermal_system_core.surface_condition_compare(surface,conditions)
   function thermal_system_core.handle_destroy_event(event)
     if storage.registered_entities == nil then return end
     local machine = storage.registered_entities[event.registration_number]--recall what kind of machine we destroyed
-    if machine == nil then game.print("tried to destroy unregistered machine") return end
+    if machine == nil then return end
     storage.registered_entities[event.registration_number] = nil --Clear the entry, as its irrelevant now
   	if storage.interfaces[machine][event.useful_id] ~= nil then
   		local entry = storage.interfaces[machine][event.useful_id]
