@@ -312,7 +312,7 @@ return icons end
     })
     table.insert(machine.custom_tooltip_fields,{
       name = {"thermal-system.efficiency"},
-      value = {"thermal-system.machine-efficiency",tostring(heat_ratio)},
+      value = {"thermal-system.machine-efficiency",tostring(heat_ratio*100)},
       order = 254,
     })
     if feature_flags["space_travel"] then
