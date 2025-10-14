@@ -1,3 +1,5 @@
+--this file contains the major components of the runtime scripting of TFMG Thermal. You should not have to interact with this in any way, though the functions can be called on the off chance they are useful to you.
+
 local flib_table = require("__flib__/table")
 local thermal_system_core = {}
 
@@ -88,7 +90,7 @@ function thermal_system_core.surface_condition_compare(surface,conditions)
     local max_working_temp = thermal_prototype.max_working_temperature
     local max_safe_temp = thermal_prototype.max_safe_temperature
 
-    local update_budget = 1 -- define how many machines to update, per category
+    local update_budget = 5000 -- define how many machines to update, per category
     local delta_time = 1
     local delta = table_size(table)/update_budget
     if delta > 1 then--if update budget is bigger than table size, you will get a delta time of 1, but if table size is larger than budget, then delta time increases.
