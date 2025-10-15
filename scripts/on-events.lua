@@ -59,7 +59,6 @@ script.on_event(
   defines.events.on_built_entity,
   function(event)
     thermal_system_core.handle_build_event(event)
-    
   end
 )
 script.on_event(
