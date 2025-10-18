@@ -92,7 +92,7 @@ function thermal_system_gui.on_gui_tick()
 			local max_safe_temperature = gui_storage.max_safe_temperature
 			local temperature = interface.interface.temperature
 			local energy_multiplier = interface.machine.consumption_bonus + 1
-			local heat_output = gui_storage.base_heat_output * energy_multiplier
+			local heat_output = (gui_storage.base_heat_output * energy_multiplier)/1000000
 
 			gui_storage.gui["1"]["temperature-reading"].caption = "Temperature: "..string.format("%.2f",temperature).."°C"
 			gui_storage.gui["1"]["heat-bar"].value = temperature/max_working_temperature
