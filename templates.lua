@@ -56,3 +56,6 @@ thermal_system = {
 --additional notes:
   --Machine specific heat is calculated based on the footprint of the machine, A machine has a heat capacity equivilent to the same amount of space in heat pipes. or 1MJ per tile.
   --This means larger machines will take longer to heat up, they have a larger thermal mass.
+
+--limitations
+  --Machines that do not rotate wont have rotatable thermal interfaces. (I am trying to solve this, but its a very complicated problem)

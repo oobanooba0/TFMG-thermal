@@ -1,0 +1,5 @@
+---------------------------------------------------------------------------------------------------
+Version: 0.1.1
+Date: 2025-10-18
+  Changes:
+    - locale for ground radiator and such. this is the default changelog and can easily be overwritten by whatever you wish it to be.
