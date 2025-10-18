@@ -23,12 +23,15 @@ local function build_thermal_entity_filter()--set the build event filters. This 
   script.set_event_filter(defines.events.on_space_platform_built_entity,filters)
 end
 
-local function setup_storage_tables()
+local function setup_storage_tables()--this handles the creation of storage tables, but pays no mind to existing storage tables that must no longer exist. Deal with later.
   if storage.interfaces == nil then
     storage.interfaces = {}
   end
   if storage.table_index == nil then
     storage.table_index = {}
+  end
+  if storage.players == nil then
+    storage.players = {}
   end
   for name , machine in pairs(prototypes.mod_data) do--build the sub tables for each machine if they dont already exist. so we can guarantee they exist before any entities have been built.
     if machine.data_type == "TFMG-thermal.thermal-interface" then
@@ -89,13 +92,39 @@ script.on_event(
 	defines.events.on_object_destroyed,
 	function(event)
 		thermal_system_core.handle_destroy_event(event)
+    thermal_system_gui.gui_cleanup(event)
 	end
 )
 
 script.on_event(
   defines.events.on_tick,--Its HaNlDeR sHoUldNt InCluDe PeRfOrMaNce HeAvY CoDe. You cant tell me what to do.
-  function ()
+  function()
     thermal_system_core.thermal_update()
+    thermal_system_gui.on_gui_tick()
   end
 )
+
+---Sketchy Gui related events. Replace these later
+
+script.on_event(defines.events.on_player_created, 
+function(event)
+	thermal_system_gui.on_player_join(event)
+end)
+
+script.on_event(defines.events.on_gui_opened,
+  function(event)
+    if event.gui_type == defines.gui_type.entity then
+	  	thermal_system_gui.gui_open(event)
+    end
+  end
+)
+
+script.on_event(defines.events.on_gui_closed,
+  function(event)
+	  if event.gui_type == defines.gui_type.entity then
+		thermal_system_gui.gui_close(event)
+	  end
+  end
+)
+
 

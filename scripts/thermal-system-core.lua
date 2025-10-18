@@ -3,7 +3,7 @@
 local flib_table = require("__flib__/table")
 local thermal_system_core = {}
 
-function thermal_system_core.surface_condition_compare(surface,conditions)
+function thermal_system_core.surface_condition_compare(surface,conditions)--conditions should be as table
   if conditions == nil then return true end
     for _ , condition in pairs(conditions) do
       local surface_condition_value = surface.get_property(prototypes.surface_property[condition.property])
@@ -22,14 +22,16 @@ function thermal_system_core.surface_condition_compare(surface,conditions)
     local conditions = interface_prototype.surface_conditions
 
     if thermal_system_core.surface_condition_compare(surface,conditions) == false then return end --You shall not pass
-
+    --deal with mirrors
     if machine.mirroring == true then direction = direction + 4 end 
-    local _reg_number, unit_number, _type = script.register_on_object_destroyed(machine)
+    local _reg_number, unit_number, _type = script.register_on_object_destroyed(machine) --register destruction event
     local thermal_prototype = prototypes.mod_data["TFMG-thermal-"..machine.name].data
   	local interface = machine.surface.create_entity({name = machine.name .. "-thermal-interface"..direction,position = machine.position, force = machine.force })
   	interface.disabled_by_script = true
-  	interface.temperature = temperature or thermal_prototype.default_temperature
+    local temperature = temperature or thermal_prototype.default_temperature
+  	interface.temperature = temperature
   	interface.destructible = false
+    --Store the entity in its table.
   	table.insert(storage.interfaces[machine.name], unit_number, { machine = machine, interface = interface })
     if storage.registered_entities == nil then
       storage.registered_entities = {}

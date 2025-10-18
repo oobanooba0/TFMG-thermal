@@ -285,7 +285,12 @@ return icons end
     local energy_usage_per_tick = util.parse_energy(machine.energy_usage) -- in joules
     local base_heat_output = energy_usage_per_tick*heat_ratio*60--in W
     local base_temperature_increase_per_tick = (energy_usage_per_tick*heat_ratio)/(specific_heat)--precalculate the per tick base heat output of the machine. That way we don't need to calculate it in runtime.
-    local default_temperature = machine.thermal_system.default_temperature or ((machine.thermal_system_max_working_temperature or 250) - 10)
+    local default_temperature = 0
+    if max_working_temperature >= max_safe_temperature then
+      default_temperature = max_safe_temperature - 10
+    else
+      default_temperature = max_working_temperature - 10
+    end
 
     local machine_data = {--this information we take into runtime, since we need it for scripts or for gui.
       type = "mod-data",
