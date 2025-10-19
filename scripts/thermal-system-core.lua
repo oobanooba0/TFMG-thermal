@@ -86,18 +86,18 @@ function thermal_system_core.surface_condition_compare(surface,conditions)--cond
 		end
   end
 
-  local function thermal_update_category(type,table)--Update a whole category
+  local function thermal_update_category(type,table,registered_entities_size)--Update a whole category
     local thermal_prototype = prototypes.mod_data["TFMG-thermal-"..type].data
     local base_temperature_increase_per_tick = thermal_prototype.base_temperature_increase_per_tick --Precalculation rules.
     local max_working_temp = thermal_prototype.max_working_temperature
     local max_safe_temp = thermal_prototype.max_safe_temperature
-
-    local update_budget = 5000 -- define how many machines to update, per category
-    local delta_time = 1
-    local delta = table_size(table)/update_budget
-    if delta > 1 then--if update budget is bigger than table size, you will get a delta time of 1, but if table size is larger than budget, then delta time increases.
-      delta_time = delta
+    local category_size = table_size(table)
+    local update_budget = settings.global["update-quota"].value*(category_size/registered_entities_size)
+    local delta_time = category_size/update_budget
+    if delta_time < 1 then--if update budget is bigger than table size, you will get a delta time of 1, but if table size is larger than budget, then delta time increases.
+      delta_time = 1
     end
+    --game.print("TFMG-thermal-"..type..":"..update_budget.." "..delta_time) -- update distribution debug checker
     storage.table_index[type] = flib_table.for_n_of(
       table,storage.table_index[type], update_budget,
       function(v)
@@ -107,8 +107,9 @@ function thermal_system_core.surface_condition_compare(surface,conditions)--cond
   end
 
   function thermal_system_core.thermal_update()
+    local registered_entities_size = table_size(storage.registered_entities)
     for type , table in pairs(storage.interfaces) do
-      thermal_update_category(type,table)
+      thermal_update_category(type,table,registered_entities_size)
     end
   end
 
