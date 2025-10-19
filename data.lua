@@ -8,3 +8,5 @@ require("prototypes.custom-inputs")
 for name, prototype in pairs(data.raw["assembling-machine"]) do
   prototype.thermal_system = {}
 end
+
+data.raw["assembling-machine"]["ground-radiator"].thermal_system = nil

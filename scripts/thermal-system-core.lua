@@ -20,14 +20,7 @@ local flib_table = require("__flib__/table")
       flip_horizontal = {5,8,7,6,1,4,3,2},
       flip_vertical = {7,6,5,8,3,2,1,4},
     },
-    RF_04 = {--that means it is flippable, but flips are just 2 rotations --double check the correctness of this
-      rotate = {2,3,4,1},
-      rotate_reverse = {4,1,2,3},
-      flip_horizontal = {3,4,1,2},
-      flip_vertical = {3,4,1,2},
-    }
   }
-
 
 
 local thermal_system_core = {}
@@ -45,10 +38,17 @@ function thermal_system_core.surface_condition_compare(surface,conditions)--cond
     --gather important data
     local machine = entity or event.entity
     --get direction information
-    if direction == nil then --if no direction information is provided, we're gonna take it from the parent
-     direction = machine.direction/4+1
-      if machine.mirroring == true then direction = direction + 4 end
+    if direction == nil then --if no direction information is provided, we'll check if this entity has some tags
+      if event.tags and event.tags.thermal_direction then
+        direction = event.tags.thermal_direction
+      else
+        direction = machine.direction/4+1
+        if machine.mirroring == true then
+          direction = direction + 4
+        end
+      end
     end
+    --if event.tags and event.tags.thermal_direction then game.print(event.tags.thermal_direction) else game.print("no tags on this entity") end --check if tags are coming though
     local surface = machine.surface
     --Deal with surface conditions
     local interface_prototype = prototypes.entity[machine.name .. "-thermal-interface"..direction]
@@ -95,8 +95,8 @@ function thermal_system_core.surface_condition_compare(surface,conditions)--cond
 --new experemental rotation events
 
   local function get_entry_from_input_event(event)
+    if not event.selected_prototype or storage.interfaces[event.selected_prototype.name] == nil then return end
     local interface_table = storage.interfaces[event.selected_prototype.name]
-    if not event.selected_prototype or interface_table == nil then return end
     local machine_prototype = event.selected_prototype
     local player = game.players[event.player_index]
     local surface = player.character and player.character.surface or player.surface
@@ -105,13 +105,14 @@ function thermal_system_core.surface_condition_compare(surface,conditions)--cond
     local v = interface_table[machine.unit_number]
   return v,machine end
 
-  function thermal_system_core.handle_transform(event,transform)
+  function thermal_system_core.handle_transform(event,transform) --Deals with getting a new direction based on the machines rotation rules and such.
     local v,machine = get_entry_from_input_event(event)
     if v == nil then return end
     local rotation_ruleset = v.ruleset
+    if ruleset_lookup[rotation_ruleset] == nil then return game.print("ruleset "..rotation_ruleset.." does not exist.") end
     local new_direction = ruleset_lookup[rotation_ruleset][transform][v.direction] -- look up the new rotation from the table.
     if new_direction == nil then return game.print("no new direction found") end
-    game.print(v.direction..transform..new_direction)
+    --game.print(v.direction..transform..new_direction) --debug to help show direction changes
 
     --now setup the destruction
     local temperature = v.interface.temperature
@@ -120,6 +121,70 @@ function thermal_system_core.surface_condition_compare(surface,conditions)--cond
     --rebuild the entity
   	thermal_system_core.handle_build_event(nil,v.machine,new_direction,temperature)
   end
+
+--blueprint handlers
+  --blueprint setup
+  script.on_event(defines.events.on_player_setup_blueprint, function(event)
+  	-- Create the temporary setup object that allows manipulation via bplib
+  	local bp_setup = BlueprintSetup:new(event)
+  	if not bp_setup then return end
+
+  	-- Get a map from blueprint indices to world entities.
+  	local map = bp_setup:map_blueprint_indices_to_world_entities()
+  	if not map then return end
+
+  	-- Check for any entities matching your custom entity
+  	for bp_index, machine in pairs(map) do
+      local interface_prototype = prototypes.mod_data["TFMG-thermal-"..machine.name] --for every entity in the blueprint,   we'll check if we have a thermal prototype associated with it
+      if interface_prototype and storage.interfaces[machine.name] then
+  			-- Calculate your custom tags here based on information about your
+  			-- entity.
+        local v = storage.interfaces[machine.name][machine.unit_number]
+        if v then
+  			  bp_setup:apply_tags(bp_index, { thermal_direction = v.direction })
+        end
+  		end
+  	end
+  end)
+
+--blueprint place
+  ---@param bp_entity BlueprintEntity
+  local function blueprint_entity_filter(bp_entity)
+    local bp_entity_name = bp_entity.name
+    if not prototypes.mod_data["TFMG-thermal-"..bp_entity_name] then return false end --scan all the thermal entities we  have, and see if we match?
+    return true
+  end
+
+  ---@param tags Tags
+  ---@param entity LuaEntity
+  local function apply_blueprint_tags(tags, entity)
+
+  end
+
+-- When a blueprint containing your custom entity is stamped down over an
+-- existing entity, use the tags stored in the blueprint to update your
+-- entity's state.
+script.on_event(defines.events.on_pre_build, function(event)
+	local bp_build = BlueprintBuild:new(event)
+	-- Will be `nil` if the event was not a blueprint build.
+	if not bp_build then return end
+
+	-- Get entities in the blueprint that (1) match your custom entity and
+	-- (2) are being placed over existing entities.
+	local overlap_map = bp_build:map_blueprint_indices_to_overlapping_entities(
+		blueprint_entity_filter
+	)
+	if not overlap_map or (not next(overlap_map)) then return end
+
+	-- Map blueprint tags on to the entities
+	local bp_entities = bp_build:get_entities() --[[@as BlueprintEntity[] ]]
+	for bp_index, entity in pairs(overlap_map) do
+		local tags = bp_entities[bp_index].tags or {}
+		apply_blueprint_tags(tags, entity)
+	end
+end)
+
+
 --thermal system tick updates
 
   function thermal_system_core.thermal_update_machine(v,base_temperature_increase_per_tick,max_working_temp,max_safe_temp,delta_time)--Update an individual machine

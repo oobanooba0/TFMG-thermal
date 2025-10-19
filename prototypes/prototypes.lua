@@ -130,7 +130,7 @@ data:extend({
       connections =
       {--north connection is not real and cannot hurt me.
         { position = {0, -1}, direction = defines.direction.north},
-        { position = {1, 0}, direction = defines.direction.east},
+        { position = {1, 1}, direction = defines.direction.east},
         { position = {0, 1}, direction = defines.direction.south},
         { position = {-1, 0}, direction = defines.direction.west},
       },
