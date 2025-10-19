@@ -13,7 +13,7 @@ local flib_table = require("__flib__/table")
 
   --we index each sequence of orientations by initial orientation, to next orientation.
 
-  ruleset_lookup = {
+  ruleset_lookup = {--ruleset transform current_rotation
     RF_08 = {
       rotate = {2,3,4,1,6,7,8,5},
       rotate_reverse = {4,1,2,3,8,5,6,7},
@@ -37,61 +37,59 @@ function thermal_system_core.surface_condition_compare(surface,conditions)--cond
   function thermal_system_core.handle_build_event(event,entity,direction,temperature) -- create machines create machines create machines create machines create machines create machines create machines create
     --gather important data
     local machine = entity or event.entity
+    if machine.valid == false then return game.print("tried to build invalid machine")  end
+    local surface = machine.surface
+    
+
+
+
     --get direction information
-    if direction == nil then --if no direction information is provided, we'll check if this entity has some tags
-      if event.tags and event.tags.thermal_direction then
+    if direction == nil then --if no direction information is provided
+      if event and event.tags and event.tags.thermal_direction then
         direction = event.tags.thermal_direction
+        --game.print(event.tags.thermal_direction)
       else
         direction = machine.direction/4+1
-        if machine.mirroring == true then
-          direction = direction + 4
-        end
+        if machine.mirroring == true then direction = direction + 4 end
       end
     end
     --if event.tags and event.tags.thermal_direction then game.print(event.tags.thermal_direction) else game.print("no tags on this entity") end --check if tags are coming though
-    local surface = machine.surface
     --Deal with surface conditions
     local interface_prototype = prototypes.entity[machine.name .. "-thermal-interface"..direction]
     local conditions = interface_prototype.surface_conditions
-    --deal with rotation ruleset
-    local rotation_ruleset = "RF_08"
 
     if thermal_system_core.surface_condition_compare(surface,conditions) == false then return end --You shall not pass
    
     local _reg_number, unit_number, _type = script.register_on_object_destroyed(machine) --register destruction event
     local thermal_prototype = prototypes.mod_data["TFMG-thermal-"..machine.name].data
   	local interface = machine.surface.create_entity({name = machine.name .. "-thermal-interface"..direction,position = machine.position, force = machine.force })
+    if interface == nil then return game.print("entity wasnt created") end
   	interface.disabled_by_script = true
     local temperature = temperature or thermal_prototype.default_temperature
   	interface.temperature = temperature
   	interface.destructible = false
     --Store the entity in its table.
-  	table.insert(storage.interfaces[machine.name], unit_number, { machine = machine, interface = interface, direction = direction, ruleset = rotation_ruleset})
-    table.insert(storage.registered_entities,_reg_number,machine.name)--we need this to be able to recall information about the machine when destorying it
-  end
-  
-  function thermal_system_core.handle_rotate_event(event)
-    machine = event.entity
-    if storage.interfaces[machine.name] == nil then return end -- since we cant 
-  	local v = storage.interfaces[machine][machine.unit_number]
-  	local temperature = v.interface.temperature
-  	v.interface.destroy()
-  	storage.interfaces[machine.name][machine.unit_number] = nil
-  	thermal_system_core.handle_build_event(nil,v.machine,temperature)
+  	storage.interfaces[machine.name][unit_number] = { machine = machine, interface = interface, direction = direction}
+    storage.registered_entities[unit_number] = machine.name
+    --table.insert(storage.registered_entities,unit_number,machine.name)--we need this to be able to recall information about the machine when destorying it
   end
 
   function thermal_system_core.handle_destroy_event(event)
-    if storage.registered_entities == nil then return end
-    local machine = storage.registered_entities[event.registration_number]--recall what kind of machine we destroyed
-    if machine == nil then return end
-    storage.registered_entities[event.registration_number] = nil --Clear the entry, as its irrelevant now
-  	if storage.interfaces[machine][event.useful_id] ~= nil then
-  		local entry = storage.interfaces[machine][event.useful_id]
-  		entry.interface.destroy()
-  		storage.interfaces[machine][event.useful_id] = nil
-     end
+    if not storage.registered_entities then return end
+    local unit_number = event.useful_id
+    local machine = storage.registered_entities[unit_number]--recall what kind of machine we destroyed
+    if not machine then return game.print("machine was nil"..unit_number) end
+  	if storage.interfaces[machine] and storage.interfaces[machine][unit_number] then
+  		local v = storage.interfaces[machine][unit_number]
+  		if v.interface.destroy() == true then
+        --something something undo tags?
+  		  storage.interfaces[machine][unit_number] = nil
+        storage.registered_entities[unit_number] = nil --Clear the entry, as its irrelevant now
+      else game.print("destruction failed")
+      end
+    else game.print("no storage entry here")
+    end
   end
-
 --new experemental rotation events
 
   local function get_entry_from_input_event(event)
@@ -108,7 +106,7 @@ function thermal_system_core.surface_condition_compare(surface,conditions)--cond
   function thermal_system_core.handle_transform(event,transform) --Deals with getting a new direction based on the machines rotation rules and such.
     local v,machine = get_entry_from_input_event(event)
     if v == nil then return end
-    local rotation_ruleset = v.ruleset
+    local rotation_ruleset = prototypes.mod_data["TFMG-thermal-"..event.selected_prototype.name].data.rotation_ruleset
     if ruleset_lookup[rotation_ruleset] == nil then return game.print("ruleset "..rotation_ruleset.." does not exist.") end
     local new_direction = ruleset_lookup[rotation_ruleset][transform][v.direction] -- look up the new rotation from the table.
     if new_direction == nil then return game.print("no new direction found") end
@@ -117,7 +115,6 @@ function thermal_system_core.surface_condition_compare(surface,conditions)--cond
     --now setup the destruction
     local temperature = v.interface.temperature
     v.interface.destroy()
-  	storage.interfaces[machine.name][machine.unit_number] = nil
     --rebuild the entity
   	thermal_system_core.handle_build_event(nil,v.machine,new_direction,temperature)
   end
@@ -156,11 +153,43 @@ function thermal_system_core.surface_condition_compare(surface,conditions)--cond
   end
 
   ---@param tags Tags
-  ---@param entity LuaEntity
-  local function apply_blueprint_tags(tags, entity)
-
+  ---@param machine LuaEntity
+  local function apply_blueprint_tags_replace(tags, machine) --handles pasting from blueprint onto existing entities
+    if storage.interfaces[machine.name] and storage.interfaces[machine.name][machine.unit_number] then
+    local v = storage.interfaces[machine.name][machine.unit_number]
+    if not v.interface.valid then return end
+    local new_direction = tags.thermal_direction
+    --now setup the destruction
+    local temperature = v.interface.temperature
+    v.interface.destroy()
+    --rebuild the entity
+  	thermal_system_core.handle_build_event(nil,v.machine,new_direction,temperature)
+    end
   end
 
+  local function apply_place_rotation(event,bp_entities,bp_locations,surface)--apply a rotation to the entities in the blueprint according to their rotation rules.
+    local rotation = event.direction/4+1
+    local flip_horizontal = event.flip_horizontal
+    local flip_vertical = event.flip_vertical
+    --game.print(rotation..tostring(flip_horizontal)..tostring(flip_vertical))
+    for bp_index, bp_entity in pairs(bp_entities) do
+      if blueprint_entity_filter(bp_entity) and bp_entity.tags and bp_entity.tags.thermal_direction then --only if we have tags in there already.
+          if prototypes.mod_data["TFMG-thermal-"..bp_entity.name] then
+          local rotation_ruleset = prototypes.mod_data["TFMG-thermal-"..bp_entity.name].data.rotation_ruleset
+          if ruleset_lookup[rotation_ruleset] == nil then return game.print("ruleset "..rotation_ruleset.." does not exist.") end
+          local tag_rotation = bp_entity.tags.thermal_direction
+          for i = 2 , rotation do
+            tag_rotation = ruleset_lookup[rotation_ruleset]["rotate"][tag_rotation]
+          end
+          if flip_horizontal == true then tag_rotation = ruleset_lookup[rotation_ruleset]["flip_horizontal"][tag_rotation]  end
+          if flip_vertical == true then tag_rotation = ruleset_lookup[rotation_ruleset]["flip_vertical"][tag_rotation] end
+          bp_entity.tags.thermal_direction = tag_rotation
+
+          ---somehow, get the fucking rotation information into the fuckign built entity i swear to fucking god.
+        end
+      end
+    end
+  end
 -- When a blueprint containing your custom entity is stamped down over an
 -- existing entity, use the tags stored in the blueprint to update your
 -- entity's state.
@@ -168,6 +197,11 @@ script.on_event(defines.events.on_pre_build, function(event)
 	local bp_build = BlueprintBuild:new(event)
 	-- Will be `nil` if the event was not a blueprint build.
 	if not bp_build then return end
+  
+  local bp_entities = bp_build:get_entities() --[[@as BlueprintEntity[] ]]
+  local bp_locations = bp_build:map_blueprint_indices_to_world_positions()
+  --game.print(serpent.block(bp_locations))
+  apply_place_rotation(event,bp_entities,bp_locations,bp_build.surface)
 
 	-- Get entities in the blueprint that (1) match your custom entity and
 	-- (2) are being placed over existing entities.
@@ -175,12 +209,11 @@ script.on_event(defines.events.on_pre_build, function(event)
 		blueprint_entity_filter
 	)
 	if not overlap_map or (not next(overlap_map)) then return end
-
 	-- Map blueprint tags on to the entities
-	local bp_entities = bp_build:get_entities() --[[@as BlueprintEntity[] ]]
+	
 	for bp_index, entity in pairs(overlap_map) do
 		local tags = bp_entities[bp_index].tags or {}
-		apply_blueprint_tags(tags, entity)
+		apply_blueprint_tags_replace(tags, entity)
 	end
 end)
 
@@ -189,6 +222,7 @@ end)
 
   function thermal_system_core.thermal_update_machine(v,base_temperature_increase_per_tick,max_working_temp,max_safe_temp,delta_time)--Update an individual machine
     if v.machine.valid == false then return end --If the machine isnt valid, don't run the script.
+    if v.interface.valid == false then return end
 		local temperature = v.interface.temperature
 		if v.machine.status == 1 then --if the machine is working, heat it up.
 			v.interface.temperature = temperature + (delta_time*base_temperature_increase_per_tick*(1 + v.machine.consumption_bonus))--This is the equation of doom. this is 90% of this mods performance cost.
@@ -218,6 +252,7 @@ end)
     local max_working_temp = thermal_prototype.max_working_temperature
     local max_safe_temp = thermal_prototype.max_safe_temperature
     local category_size = table_size(table)
+    --game.print(category_size)
     local update_budget = settings.global["update-quota"].value*(category_size/registered_entities_size)
     local delta_time = category_size/update_budget
     if delta_time < 1 then--if update budget is bigger than table size, you will get a delta time of 1, but if table size is larger than budget, then delta time increases.
@@ -237,6 +272,8 @@ end)
     for type , table in pairs(storage.interfaces) do
       thermal_update_category(type,table,registered_entities_size)
     end
+    --game.print(registered_entities_size)
+    --game.print(serpent.block(storage.registered_entities))
   end
 
 return thermal_system_core

@@ -17,10 +17,12 @@ local function build_thermal_entity_filter()--set the build event filters. This 
     script.on_event(defines.events.on_built_entity,nil)
     script.on_event(defines.events.on_robot_built_entity,nil)
     script.on_event(defines.events.on_space_platform_built_entity,nil)
+    script.on_event(defines.events.on_entity_cloned,nil)
   return end
   script.set_event_filter(defines.events.on_built_entity,filters)
   script.set_event_filter(defines.events.on_robot_built_entity,filters)
   script.set_event_filter(defines.events.on_space_platform_built_entity,filters)
+  script.set_event_filter(defines.events.on_entity_cloned,filters)
 end
 
 local function setup_storage_tables()--this handles the creation of storage tables, but pays no mind to existing storage tables that must no longer exist. Deal with later.
@@ -76,6 +78,12 @@ script.on_event(
 )
 script.on_event(
   defines.events.on_space_platform_built_entity,
+  function(event)
+    thermal_system_core.handle_build_event(event)
+  end
+)
+script.on_event(
+  defines.events.on_entity_cloned,
   function(event)
     thermal_system_core.handle_build_event(event)
   end

@@ -304,6 +304,7 @@ return icons end
         base_heat_output = base_heat_output,--we still keep these cause theyre useful for gui, and its easy to grab them from here.
         heat_ratio = heat_ratio,
         default_temperature = default_temperature,
+        rotation_ruleset = "RF_08",
         --debug_field = calculate_machine_footprint(machine),
         --rotations = 4,
         --mirrorable = true,
