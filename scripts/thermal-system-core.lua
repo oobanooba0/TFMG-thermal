@@ -1,6 +1,35 @@
 --this file contains the major components of the runtime scripting of TFMG Thermal. You should not have to interact with this in any way, though the functions can be called on the off chance they are useful to you.
-
+local bplib = require("__bplib__.blueprint")
+local BlueprintBuild = bplib.BlueprintBuild
+local BlueprintSetup = bplib.BlueprintSetup
 local flib_table = require("__flib__/table")
+ 
+--rotation ruleset lookup table
+  --R = Rotatable
+  --r = rotatable, only in hand
+  --F = flippable,
+  --f = flippable only in hand
+  --08 = 8 unique directions
+
+  --we index each sequence of orientations by initial orientation, to next orientation.
+
+  ruleset_lookup = {
+    RF_08 = {
+      rotate = {2,3,4,1,6,7,8,5},
+      rotate_reverse = {4,1,2,3,8,5,6,7},
+      flip_horizontal = {5,8,7,6,1,4,3,2},
+      flip_vertical = {7,6,5,8,3,2,1,4},
+    },
+    RF_04 = {--that means it is flippable, but flips are just 2 rotations --double check the correctness of this
+      rotate = {2,3,4,1},
+      rotate_reverse = {4,1,2,3},
+      flip_horizontal = {3,4,1,2},
+      flip_vertical = {3,4,1,2},
+    }
+  }
+
+
+
 local thermal_system_core = {}
 
 function thermal_system_core.surface_condition_compare(surface,conditions)--conditions should be as table
@@ -12,18 +41,23 @@ function thermal_system_core.surface_condition_compare(surface,conditions)--cond
   return true end
 
 --Compound entity handlers
-  function thermal_system_core.handle_build_event(event,entity,temperature) -- create machines create machines create machines create machines create machines create machines create machines create
+  function thermal_system_core.handle_build_event(event,entity,direction,temperature) -- create machines create machines create machines create machines create machines create machines create machines create
     --gather important data
     local machine = entity or event.entity
+    --get direction information
+    if direction == nil then --if no direction information is provided, we're gonna take it from the parent
+     direction = machine.direction/4+1
+      if machine.mirroring == true then direction = direction + 4 end
+    end
     local surface = machine.surface
-    local direction = machine.direction/4+1
     --Deal with surface conditions
     local interface_prototype = prototypes.entity[machine.name .. "-thermal-interface"..direction]
     local conditions = interface_prototype.surface_conditions
+    --deal with rotation ruleset
+    local rotation_ruleset = "RF_08"
 
     if thermal_system_core.surface_condition_compare(surface,conditions) == false then return end --You shall not pass
-    --deal with mirrors
-    if machine.mirroring == true then direction = direction + 4 end 
+   
     local _reg_number, unit_number, _type = script.register_on_object_destroyed(machine) --register destruction event
     local thermal_prototype = prototypes.mod_data["TFMG-thermal-"..machine.name].data
   	local interface = machine.surface.create_entity({name = machine.name .. "-thermal-interface"..direction,position = machine.position, force = machine.force })
@@ -32,20 +66,17 @@ function thermal_system_core.surface_condition_compare(surface,conditions)--cond
   	interface.temperature = temperature
   	interface.destructible = false
     --Store the entity in its table.
-  	table.insert(storage.interfaces[machine.name], unit_number, { machine = machine, interface = interface })
-    if storage.registered_entities == nil then
-      storage.registered_entities = {}
-    end
+  	table.insert(storage.interfaces[machine.name], unit_number, { machine = machine, interface = interface, direction = direction, ruleset = rotation_ruleset})
     table.insert(storage.registered_entities,_reg_number,machine.name)--we need this to be able to recall information about the machine when destorying it
   end
   
   function thermal_system_core.handle_rotate_event(event)
-    machine = event.entity.name
-    if storage.interfaces[event.entity.name] == nil then return end -- since we cant 
-  	local v = storage.interfaces[event.entity.name][event.entity.unit_number]
+    machine = event.entity
+    if storage.interfaces[machine.name] == nil then return end -- since we cant 
+  	local v = storage.interfaces[machine][machine.unit_number]
   	local temperature = v.interface.temperature
   	v.interface.destroy()
-  	storage.interfaces[event.entity.name][event.entity.unit_number] = nil
+  	storage.interfaces[machine.name][machine.unit_number] = nil
   	thermal_system_core.handle_build_event(nil,v.machine,temperature)
   end
 
@@ -60,6 +91,36 @@ function thermal_system_core.surface_condition_compare(surface,conditions)--cond
   		storage.interfaces[machine][event.useful_id] = nil
      end
   end
+
+--new experemental rotation events
+
+  local function get_entry_from_input_event(event)
+    local interface_table = storage.interfaces[event.selected_prototype.name]
+    if not event.selected_prototype or interface_table == nil then return end
+    local machine_prototype = event.selected_prototype
+    local player = game.players[event.player_index]
+    local surface = player.character and player.character.surface or player.surface
+    local machine = surface.find_entity(machine_prototype.name,event.cursor_position)
+    if machine == nil then return end
+    local v = interface_table[machine.unit_number]
+  return v,machine end
+
+  function thermal_system_core.handle_transform(event,transform)
+    local v,machine = get_entry_from_input_event(event)
+    if v == nil then return end
+    local rotation_ruleset = v.ruleset
+    local new_direction = ruleset_lookup[rotation_ruleset][transform][v.direction] -- look up the new rotation from the table.
+    if new_direction == nil then return game.print("no new direction found") end
+    game.print(v.direction..transform..new_direction)
+
+    --now setup the destruction
+    local temperature = v.interface.temperature
+    v.interface.destroy()
+  	storage.interfaces[machine.name][machine.unit_number] = nil
+    --rebuild the entity
+  	thermal_system_core.handle_build_event(nil,v.machine,new_direction,temperature)
+  end
+--thermal system tick updates
 
   function thermal_system_core.thermal_update_machine(v,base_temperature_increase_per_tick,max_working_temp,max_safe_temp,delta_time)--Update an individual machine
     if v.machine.valid == false then return end --If the machine isnt valid, don't run the script.
