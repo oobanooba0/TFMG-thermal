@@ -1,4 +1,10 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.1.2
+Date: 2025-10-19
+  Features:
+    - update quota setting added (Thermal System entity updates per tick)
+    - Dynamic update budgeting added, You now have a pool of updates which every machine type draws from, if you have more of that machine, it gets allocated a proportionately larger budget.
+---------------------------------------------------------------------------------------------------
 Version: 0.1.1
 Date: 2025-10-18
   Changes:
