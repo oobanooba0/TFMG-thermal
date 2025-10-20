@@ -6,17 +6,22 @@ local flib_table = require("__flib__/table")
  
 --rotation ruleset lookup table
   --R = Rotatable
-  --r = rotatable, only in hand
+  --r = Rotatable, but 180 degrees.
   --F = flippable,
-  --f = flippable only in hand
-  --08 = 8 unique directions
+  --08 = 8 unique variations
 
   --we index each sequence of orientations by initial orientation, to next orientation.
 
   ruleset_lookup = {--ruleset transform current_rotation
-    RF_08 = {
+    RF_08 = {--Normal, free rotation, for square machines, and 8direction machines in hand
       rotate = {2,3,4,1,6,7,8,5},
       rotate_reverse = {4,1,2,3,8,5,6,7},
+      flip_horizontal = {5,8,7,6,1,4,3,2},
+      flip_vertical = {7,6,5,8,3,2,1,4},
+    },
+    rF_08 = {--restricted rotations for rectangular machines.
+      rotate = {3,4,1,2,7,8,5,6},
+      rotate_reverse = {3,4,1,2,7,8,5,6},
       flip_horizontal = {5,8,7,6,1,4,3,2},
       flip_vertical = {7,6,5,8,3,2,1,4},
     },
@@ -39,15 +44,17 @@ function thermal_system_core.surface_condition_compare(surface,conditions)--cond
     local machine = entity or event.entity
     if machine.valid == false then return game.print("tried to build invalid machine")  end
     local surface = machine.surface
-    
 
-
+    local bp_proxy = surface.find_entity("TFMG-thermal-bp-proxy",machine.position)
+    if bp_proxy then
+        direction = (math.floor(bp_proxy.color.r*255))
+      bp_proxy.destroy()
+    end
 
     --get direction information
     if direction == nil then --if no direction information is provided
       if event and event.tags and event.tags.thermal_direction then
         direction = event.tags.thermal_direction
-        --game.print(event.tags.thermal_direction)
       else
         direction = machine.direction/4+1
         if machine.mirroring == true then direction = direction + 4 end
@@ -62,6 +69,7 @@ function thermal_system_core.surface_condition_compare(surface,conditions)--cond
    
     local _reg_number, unit_number, _type = script.register_on_object_destroyed(machine) --register destruction event
     local thermal_prototype = prototypes.mod_data["TFMG-thermal-"..machine.name].data
+    --game.print(serpent.block(thermal_prototype))
   	local interface = machine.surface.create_entity({name = machine.name .. "-thermal-interface"..direction,position = machine.position, force = machine.force })
     if interface == nil then return game.print("entity wasnt created") end
   	interface.disabled_by_script = true
@@ -70,8 +78,7 @@ function thermal_system_core.surface_condition_compare(surface,conditions)--cond
   	interface.destructible = false
     --Store the entity in its table.
   	storage.interfaces[machine.name][unit_number] = { machine = machine, interface = interface, direction = direction}
-    storage.registered_entities[unit_number] = machine.name
-    --table.insert(storage.registered_entities,unit_number,machine.name)--we need this to be able to recall information about the machine when destorying it
+    storage.registered_entities[unit_number] = machine.name--we need this to be able to recall information about the machine when destorying it
   end
 
   function thermal_system_core.handle_destroy_event(event)
@@ -90,6 +97,33 @@ function thermal_system_core.surface_condition_compare(surface,conditions)--cond
     else game.print("no storage entry here")
     end
   end
+
+  function thermal_system_core.handle_ghost_deconstruction_event(event)
+    local ghost = event.ghost
+    local bp_proxy = ghost.surface.find_entity("TFMG-thermal-bp-proxy",ghost.position)
+    if bp_proxy then
+      direction = (math.floor(bp_proxy.color.r*255))
+      bp_proxy.destroy()
+    end
+  end
+
+  function thermal_system_core.handle_bp_proxy_build_event(event)
+    thermal_system_core.schedule_event(event.tick+1,"bp_proxy",event)
+  end
+
+  function thermal_system_core.handle_bp_proxy(event)
+    --game.print(serpent.block(event))
+    local bp_proxy = event.entity
+    if not event.entity.valid then return end
+    local ghost = bp_proxy.surface.find_entities_filtered{position = bp_proxy.position,type = "entity-ghost",limit = 1}[1]
+    --if not ghost then game.print("no ghost") else game.print(serpent.line(ghost.position)..serpent.line(bp_proxy.position)) end
+    if not ghost or ghost.position["x"] ~= bp_proxy.position["x"] or ghost.position["y"] ~= bp_proxy.position["y"]  then
+      bp_proxy.destroy()
+    else
+      thermal_system_core.schedule_event(game.tick+100,"bp_proxy",event)
+    end
+  end
+
 --new experemental rotation events
 
   local function get_entry_from_input_event(event)
@@ -106,7 +140,7 @@ function thermal_system_core.surface_condition_compare(surface,conditions)--cond
   function thermal_system_core.handle_transform(event,transform) --Deals with getting a new direction based on the machines rotation rules and such.
     local v,machine = get_entry_from_input_event(event)
     if v == nil then return end
-    local rotation_ruleset = prototypes.mod_data["TFMG-thermal-"..event.selected_prototype.name].data.rotation_ruleset
+    local rotation_ruleset = prototypes.mod_data["TFMG-thermal-"..event.selected_prototype.name].data.rotation_ruleset_world
     if ruleset_lookup[rotation_ruleset] == nil then return game.print("ruleset "..rotation_ruleset.." does not exist.") end
     local new_direction = ruleset_lookup[rotation_ruleset][transform][v.direction] -- look up the new rotation from the table.
     if new_direction == nil then return game.print("no new direction found") end
@@ -148,7 +182,7 @@ function thermal_system_core.surface_condition_compare(surface,conditions)--cond
   ---@param bp_entity BlueprintEntity
   local function blueprint_entity_filter(bp_entity)
     local bp_entity_name = bp_entity.name
-    if not prototypes.mod_data["TFMG-thermal-"..bp_entity_name] then return false end --scan all the thermal entities we  have, and see if we match?
+    if not prototypes.mod_data["TFMG-thermal-"..bp_entity_name] then return false end --Check if we have a thermal system mod data entry corresponding to the entity, if not, our script can ignore this.
     return true
   end
 
@@ -163,7 +197,11 @@ function thermal_system_core.surface_condition_compare(surface,conditions)--cond
     local temperature = v.interface.temperature
     v.interface.destroy()
     --rebuild the entity
+    if machine.surface.can_place_entity{name = "entity-ghost", inner_name=machine.name,position = machine.position, directon = machine.direction, force = "player", build_check_type = defines.build_check_type.script_ghost, forced = true} then --we check if we could place the parent entity here
+      machine.surface.create_entity({name="TFMG-thermal-bp-proxy", snap_to_grid = true, position = machine.position,color = {r = new_direction,g = 0,b = 0, a = 255},force = "player",raise_built = true})--if i must pack data into colour, so be it
+    end
   	thermal_system_core.handle_build_event(nil,v.machine,new_direction,temperature)
+    --game.print("applied-tags")
     end
   end
 
@@ -183,9 +221,15 @@ function thermal_system_core.surface_condition_compare(surface,conditions)--cond
           end
           if flip_horizontal == true then tag_rotation = ruleset_lookup[rotation_ruleset]["flip_horizontal"][tag_rotation]  end
           if flip_vertical == true then tag_rotation = ruleset_lookup[rotation_ruleset]["flip_vertical"][tag_rotation] end
+          
           bp_entity.tags.thermal_direction = tag_rotation
-
-          ---somehow, get the fucking rotation information into the fuckign built entity i swear to fucking god.
+          
+          local bp_location = bp_locations[bp_index]
+          direction_check = ((tag_rotation-1) * 4)
+          if direction_check > 16 then direction_check = direction_check - 16 end
+          if surface.can_place_entity{name = "entity-ghost", inner_name=bp_entity.name,position = {bp_location[1],bp_location[2]}, directon = direction_check, force = "player", build_check_type = defines.build_check_type.script_ghost, forced = true} then --we check if we could place the parent entity here
+            surface.create_entity({name="TFMG-thermal-bp-proxy", snap_to_grid = true, position = bp_location,color = {r = tag_rotation,g = 0,b = 0, a = 255},force = "player",raise_built = true})--if i must pack data into colour, so be it
+          end
         end
       end
     end
@@ -199,6 +243,7 @@ script.on_event(defines.events.on_pre_build, function(event)
 	if not bp_build then return end
   
   local bp_entities = bp_build:get_entities() --[[@as BlueprintEntity[] ]]
+  if not bp_entities then return end --if a blueprint has no entities, then we should quit here.
   local bp_locations = bp_build:map_blueprint_indices_to_world_positions()
   --game.print(serpent.block(bp_locations))
   apply_place_rotation(event,bp_entities,bp_locations,bp_build.surface)
@@ -219,6 +264,25 @@ end)
 
 
 --thermal system tick updates
+  local function run_scheduled_events(tick)
+    if not storage.tfmg_job_list[tick] then return end
+    if storage.tfmg_job_list[tick].bp_proxy then
+      for _ , event in pairs(storage.tfmg_job_list[tick].bp_proxy) do
+        thermal_system_core.handle_bp_proxy(event)
+      end
+    end
+    storage.tfmg_job_list[tick] = nil
+  end
+
+  function thermal_system_core.schedule_event(tick,type,data) --schedule an event to be run
+    if not storage.tfmg_job_list[tick] then
+      storage.tfmg_job_list[tick] = {}
+    end
+    if not storage.tfmg_job_list[tick][type] then
+      storage.tfmg_job_list[tick][type] = {}
+    end
+    table.insert(storage.tfmg_job_list[tick][type],data)
+  end
 
   function thermal_system_core.thermal_update_machine(v,base_temperature_increase_per_tick,max_working_temp,max_safe_temp,delta_time)--Update an individual machine
     if v.machine.valid == false then return end --If the machine isnt valid, don't run the script.
@@ -267,7 +331,10 @@ end)
     )
   end
 
-  function thermal_system_core.thermal_update()
+  function thermal_system_core.thermal_update(event)
+    local tick = event.tick
+      run_scheduled_events(tick)
+
     local registered_entities_size = table_size(storage.registered_entities)
     for type , table in pairs(storage.interfaces) do
       thermal_update_category(type,table,registered_entities_size)
