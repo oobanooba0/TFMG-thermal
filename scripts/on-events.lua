@@ -17,10 +17,12 @@ local function build_thermal_entity_filter()--set the build event filters. This 
     script.on_event(defines.events.on_built_entity,nil)
     script.on_event(defines.events.on_robot_built_entity,nil)
     script.on_event(defines.events.on_space_platform_built_entity,nil)
+    script.on_event(defines.events.on_entity_cloned,nil)
   return end
   script.set_event_filter(defines.events.on_built_entity,filters)
   script.set_event_filter(defines.events.on_robot_built_entity,filters)
   script.set_event_filter(defines.events.on_space_platform_built_entity,filters)
+  script.set_event_filter(defines.events.on_entity_cloned,filters)
 end
 
 local function setup_storage_tables()--this handles the creation of storage tables, but pays no mind to existing storage tables that must no longer exist. Deal with later.
@@ -32,6 +34,9 @@ local function setup_storage_tables()--this handles the creation of storage tabl
   end
   if storage.players == nil then
     storage.players = {}
+  end
+  if storage.registered_entities == nil then
+    storage.registered_entities = {}
   end
   for name , machine in pairs(prototypes.mod_data) do--build the sub tables for each machine if they dont already exist. so we can guarantee they exist before any entities have been built.
     if machine.data_type == "TFMG-thermal.thermal-interface" then
@@ -58,6 +63,7 @@ script.on_load(function()--for some unknown reason, event handlers forget their 
   build_thermal_entity_filter()
 end)
 
+--build events
 script.on_event(
   defines.events.on_built_entity,
   function(event)
@@ -77,17 +83,12 @@ script.on_event(
   end
 )
 script.on_event(
-  defines.events.on_player_rotated_entity,
+  defines.events.on_entity_cloned,
   function(event)
-    thermal_system_core.handle_rotate_event(event)
+    thermal_system_core.handle_build_event(event)
   end
 )
-script.on_event(
-  defines.events.on_player_flipped_entity,
-  function(event)
-    thermal_system_core.handle_rotate_event(event)
-  end
-)
+--destroy events
 script.on_event(
 	defines.events.on_object_destroyed,
 	function(event)
@@ -95,6 +96,33 @@ script.on_event(
     thermal_system_gui.gui_cleanup(event)
 	end
 )
+script.on_event("interface-rotate",
+  function (event)
+    local transform = "rotate"
+    thermal_system_core.handle_transform(event,transform)
+  end
+)
+script.on_event("interface-rotate-reverse",
+  function (event)
+    local transform = "rotate_reverse"
+    thermal_system_core.handle_transform(event,transform)
+  end
+)
+script.on_event("interface-flip-horizontal",
+  function (event)
+    local transform = "flip_horizontal"
+    thermal_system_core.handle_transform(event,transform)
+  end
+)
+script.on_event("interface-flip-vertical",
+  function (event)
+    local transform = "flip_vertical"
+    thermal_system_core.handle_transform(event,transform)
+  end
+)
+
+
+
 
 script.on_event(
   defines.events.on_tick,--Its HaNlDeR sHoUldNt InCluDe PeRfOrMaNce HeAvY CoDe. You cant tell me what to do.
