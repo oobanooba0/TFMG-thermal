@@ -3,12 +3,12 @@
 
 --sanity checks and error logging
   local function log_thermal_interface_error(string)
-    log("Thermal interface generation disabled: " .. string .. ".")
+    error("Thermal interface generation failed:" .. string .. ".",0)
   end
 
   local function can_generate_thermal_interfaces(machines)
     if not machines then
-      log_thermal_interface_error("there are no machines")
+      log_thermal_interface_error("There are no machines that can be generated.")
     return end
   return true end
 
@@ -115,6 +115,11 @@ return icons end
     }
   return rotated_collision_box end
 
+  local function is_square(coordinate_pair)--checks if a pair of coordinates are square
+    if coordinate_pair[2][1]-coordinate_pair[1][1] == coordinate_pair[2][2]-coordinate_pair[1][2] then return true end
+  return false end
+
+
 --Generate the initial heat pipe connections for the north varient of the machine, either from a connection set prototype, or by generating one from scratch
   local function generate_thermal_interface_connections(machine)
     if not machine.thermal_system.connections then -- if no connections are defined, we shall generate one automagically
@@ -172,6 +177,17 @@ return icons end
     end
   return collision_box_set end
 
+   local function calculate_machine_footprint(machine)--calculate the number of tiles a machine takes up.
+    local machine_box = machine.collision_box
+    --We're gonna find number of tiles a machine takes up, so we have to round outwards to thhe outer corners of the tile.
+    local x_max = semiceil(machine_box[2][1])
+    local x_min = semifloor(machine_box[1][1])
+    local y_max = semiceil(machine_box[2][2])
+    local y_min = semifloor(machine_box[1][2])
+
+    local area = (x_max-x_min)*(y_max-y_min)
+  return area end
+
   --Because neither you, nor I want to do this every time.
 
   local function generate_heat_patches_from_connections (connections,interface)--uses the set of heat 
@@ -190,17 +206,6 @@ return icons end
       table.insert(interface.heat_connection_patches_disconnected, heat_pipe_glow_disconnected[direction])
     end
   return interface end
-
-  local function calculate_machine_footprint(machine)--calculate the number of tiles a machine takes up.
-    local machine_box = machine.collision_box
-    --We're gonna find number of tiles a machine takes up, so we have to round outwards to thhe outer corners of the tile.
-    local x_max = semiceil(machine_box[2][1])
-    local x_min = semifloor(machine_box[1][1])
-    local y_max = semiceil(machine_box[2][2])
-    local y_min = semifloor(machine_box[1][2])
-
-    local area = (x_max-x_min)*(y_max-y_min)
-  return area end
 
   local function surface_condition_compare(surface,conditions)--this function fucks.
   if conditions == nil then return true end -- if we dont have any surface conditions, we already know it will pass
@@ -239,12 +244,40 @@ return icons end
     end
   return locations end
 
+  local function build_and_check_surface_conditions(machine)--for the most part handles correcting any missing information in a surface condition table
+    if not machine.thermal_system.surface_conditions then return end
+    surface_conditions = {}
+    for _ , prototype_condition in pairs(machine.thermal_system.surface_conditions) do
+      if not prototype_condition.property then log_thermal_interface_error("a surface condition property must be specified to evaluate thermal_system surface conditions. Check prototype:"..machine.name) return end
+      local new_surface_condition = {
+        property = prototype_condition.property,
+        min = prototype_condition.min or 0,
+        max = prototype_condition.max or math.huge,
+      }
+      if new_surface_condition.min > new_surface_condition.max then log_thermal_interface_error("A surface condition's minimum value is greater than its maximum value. Check prototype:"..machine.name) return end
+      table.insert(surface_conditions,new_surface_condition)
+    end
+  return surface_conditions end
+
+  local function set_rotation_rules(machine)
+    local rotation_ruleset = "RF_08" --Right now, no distinction is needed.
+    local rotation_ruleset_world = "RF_08"
+    if not is_square(machine.collision_box) then
+      rotation_ruleset_world = "rF_08"
+    end
+  return rotation_ruleset, rotation_ruleset_world end
+
 --generate a thermal interfaces, and add it to data.raw
   local function generate_thermal_interface(machine)
     if not machine.thermal_system then return end -- Check if machine is opted into the thermal system.
     local specific_heat = calculate_machine_footprint(machine)*1000000 --in joules. 1MJ, likely will be based on the footprint of the machine.
     local connection_set = generate_thermal_interface_connection_set(machine)
     local collision_set = generate_thermal_interface_collision_box_set(machine)
+    local surface_conditions = nil
+    if feature_flags["space_travel"] then--only if we have space age features enabled can we use surface conditions. Surface conditions are stored in the interface prototype, dispite this actually not having any direct effect. Surface conditions dont affect entities placed by script.
+      surface_conditions = build_and_check_surface_conditions(machine)
+    end
+    machine.thermal_system.surface_conditions = surface_conditions
     for direction, connections in pairs(connection_set) do
       local interface = {--machine interface template
         type = "reactor",
@@ -272,9 +305,8 @@ return icons end
           connections = connections--we shall connect the world.
         },
       }
-      if feature_flags["space_travel"] then surface_conditions = machine.thermal_system.surface_conditions end --only if we have space age features enabled can we use surface conditions. Surface conditions are stored in the interface prototype, dispite this actually not having any direct effect. Surface conditions dont affect entities placed by script.
       generate_heat_patches_from_connections(interface.heat_buffer.connections,interface)
-
+      if feature_flags["space_travel"] then interface.surface_conditions = surface_conditions end
       data:extend({interface})
     end
     
@@ -292,6 +324,8 @@ return icons end
       default_temperature = max_working_temperature - 10
     end
 
+    local rotation_ruleset, rotation_ruleset_world = set_rotation_rules(machine)
+
     local machine_data = {--this information we take into runtime, since we need it for scripts or for gui.
       type = "mod-data",
       data_type = "TFMG-thermal.thermal-interface",
@@ -304,10 +338,9 @@ return icons end
         base_heat_output = base_heat_output,--we still keep these cause theyre useful for gui, and its easy to grab them from here.
         heat_ratio = heat_ratio,
         default_temperature = default_temperature,
-        rotation_ruleset = "RF_08",
-        --debug_field = calculate_machine_footprint(machine),
-        --rotations = 4,
-        --mirrorable = true,
+        rotation_ruleset = rotation_ruleset,
+        rotation_ruleset_world = rotation_ruleset_world,
+        surface_conditions = surface_conditions,
       }
     }
     data:extend({machine_data})
