@@ -1,7 +1,8 @@
 ---------------------------------------------------------------------------------------------------
-Version: 0.1.2
-Date: 2025-10-19
+Version: 0.2.0
+Date: 2025-10-20
   Features:
+    - Buildings now support rotations in blueprints, rotating blueprints, copying rotations via blueprints onto entities etc. Its not guaranteed to be perfect, but its a huge step in the right direction.
     - update quota setting added (Thermal System entity updates per tick)
     - Dynamic update budgeting added, You now have a pool of updates which every machine type draws from, if you have more of that machine, it gets allocated a proportionately larger budget.
 ---------------------------------------------------------------------------------------------------
