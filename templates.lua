@@ -56,3 +56,6 @@ TFMG_thermal = {
 --additional notes:
   --Machine specific heat is calculated based on the footprint of the machine, A machine has a heat capacity equivilent to the same amount of space in heat pipes. or 1MJ per tile.
   --This means larger machines will take longer to heat up, as they have a larger thermal mass.
+
+--This mod already includes a pre prepared ground radiator in prototypes.prototypes.lua, by default it is set to hidden and disabled, meaning it won't show up in the game. If you wish to use it, as is, simply enable it and give it a recipe. 
+--else all the graphics and textures are free for your reuse as desired.
