@@ -28,9 +28,9 @@ local flib_table = require("__flib__/table")
   }
 
 
-local thermal_system_core = {}
+local TFMG_thermal_core = {}
 
-function thermal_system_core.surface_condition_compare(surface,conditions)--conditions should be as table
+function TFMG_thermal_core.surface_condition_compare(surface,conditions)--conditions should be as table
   if conditions == nil then return true end
     for _ , condition in pairs(conditions) do
       local surface_condition_value = surface.get_property(prototypes.surface_property[condition.property])
@@ -39,7 +39,7 @@ function thermal_system_core.surface_condition_compare(surface,conditions)--cond
   return true end
 
 --Compound entity handlers
-  function thermal_system_core.handle_build_event(event,entity,direction,temperature) -- create machines create machines create machines create machines create machines create machines create machines create
+  function TFMG_thermal_core.handle_build_event(event,entity,direction,temperature) -- create machines create machines create machines create machines create machines create machines create machines create
     --gather important data
     local machine = entity or event.entity
     if machine.valid == false then return game.print("tried to build invalid machine")  end
@@ -65,7 +65,7 @@ function thermal_system_core.surface_condition_compare(surface,conditions)--cond
     local interface_prototype = prototypes.entity[machine.name .. "-thermal-interface"..direction]
     local conditions = interface_prototype.surface_conditions
 
-    if thermal_system_core.surface_condition_compare(surface,conditions) == false then return end --You shall not pass
+    if TFMG_thermal_core.surface_condition_compare(surface,conditions) == false then return end --You shall not pass
    
     local _reg_number, unit_number, _type = script.register_on_object_destroyed(machine) --register destruction event
     local thermal_prototype = prototypes.mod_data["TFMG-thermal-"..machine.name].data
@@ -81,7 +81,7 @@ function thermal_system_core.surface_condition_compare(surface,conditions)--cond
     storage.registered_entities[unit_number] = machine.name--we need this to be able to recall information about the machine when destorying it
   end
 
-  function thermal_system_core.handle_destroy_event(event)
+  function TFMG_thermal_core.handle_destroy_event(event)
     if not storage.registered_entities then return end
     local unit_number = event.useful_id
     local machine = storage.registered_entities[unit_number]--recall what kind of machine we destroyed
@@ -98,7 +98,7 @@ function thermal_system_core.surface_condition_compare(surface,conditions)--cond
     end
   end
 
-  function thermal_system_core.handle_ghost_deconstruction_event(event)
+  function TFMG_thermal_core.handle_ghost_deconstruction_event(event)
     local ghost = event.ghost
     local bp_proxy = ghost.surface.find_entity("TFMG-thermal-bp-proxy",ghost.position)
     if bp_proxy then
@@ -107,11 +107,11 @@ function thermal_system_core.surface_condition_compare(surface,conditions)--cond
     end
   end
 
-  function thermal_system_core.handle_bp_proxy_build_event(event)
-    thermal_system_core.schedule_event(event.tick+1,"bp_proxy",event)
+  function TFMG_thermal_core.handle_bp_proxy_build_event(event)
+    TFMG_thermal_core.schedule_event(event.tick+1,"bp_proxy",event)
   end
 
-  function thermal_system_core.handle_bp_proxy(event)
+  function TFMG_thermal_core.handle_bp_proxy(event)
     --game.print(serpent.block(event))
     local bp_proxy = event.entity
     if not event.entity.valid then return end
@@ -120,7 +120,7 @@ function thermal_system_core.surface_condition_compare(surface,conditions)--cond
     if not ghost or ghost.position["x"] ~= bp_proxy.position["x"] or ghost.position["y"] ~= bp_proxy.position["y"]  then
       bp_proxy.destroy()
     else
-      thermal_system_core.schedule_event(game.tick+100,"bp_proxy",event)
+      TFMG_thermal_core.schedule_event(game.tick+100,"bp_proxy",event)
     end
   end
 
@@ -137,7 +137,7 @@ function thermal_system_core.surface_condition_compare(surface,conditions)--cond
     local v = interface_table[machine.unit_number]
   return v,machine end
 
-  function thermal_system_core.handle_transform(event,transform) --Deals with getting a new direction based on the machines rotation rules and such.
+  function TFMG_thermal_core.handle_transform(event,transform) --Deals with getting a new direction based on the machines rotation rules and such.
     local v,machine = get_entry_from_input_event(event)
     if v == nil then return end
     local rotation_ruleset = prototypes.mod_data["TFMG-thermal-"..event.selected_prototype.name].data.rotation_ruleset_world
@@ -150,7 +150,7 @@ function thermal_system_core.surface_condition_compare(surface,conditions)--cond
     local temperature = v.interface.temperature
     v.interface.destroy()
     --rebuild the entity
-  	thermal_system_core.handle_build_event(nil,v.machine,new_direction,temperature)
+  	TFMG_thermal_core.handle_build_event(nil,v.machine,new_direction,temperature)
   end
 
 --blueprint handlers
@@ -200,7 +200,7 @@ function thermal_system_core.surface_condition_compare(surface,conditions)--cond
     if machine.surface.can_place_entity{name = "entity-ghost", inner_name=machine.name,position = machine.position, directon = machine.direction, force = "player", build_check_type = defines.build_check_type.script_ghost, forced = true} then --we check if we could place the parent entity here
       machine.surface.create_entity({name="TFMG-thermal-bp-proxy", snap_to_grid = true, position = machine.position,color = {r = new_direction,g = 0,b = 0, a = 255},force = "player",raise_built = true})--if i must pack data into colour, so be it
     end
-  	thermal_system_core.handle_build_event(nil,v.machine,new_direction,temperature)
+  	TFMG_thermal_core.handle_build_event(nil,v.machine,new_direction,temperature)
     --game.print("applied-tags")
     end
   end
@@ -268,13 +268,13 @@ end)
     if not storage.tfmg_job_list[tick] then return end
     if storage.tfmg_job_list[tick].bp_proxy then
       for _ , event in pairs(storage.tfmg_job_list[tick].bp_proxy) do
-        thermal_system_core.handle_bp_proxy(event)
+        TFMG_thermal_core.handle_bp_proxy(event)
       end
     end
     storage.tfmg_job_list[tick] = nil
   end
 
-  function thermal_system_core.schedule_event(tick,type,data) --schedule an event to be run
+  function TFMG_thermal_core.schedule_event(tick,type,data) --schedule an event to be run
     if not storage.tfmg_job_list[tick] then
       storage.tfmg_job_list[tick] = {}
     end
@@ -284,7 +284,7 @@ end)
     table.insert(storage.tfmg_job_list[tick][type],data)
   end
 
-  function thermal_system_core.thermal_update_machine(v,base_temperature_increase_per_tick,max_working_temp,max_safe_temp,delta_time)--Update an individual machine
+  function TFMG_thermal_core.thermal_update_machine(v,base_temperature_increase_per_tick,max_working_temp,max_safe_temp,delta_time)--Update an individual machine
     if v.machine.valid == false then return end --If the machine isnt valid, don't run the script.
     if v.interface.valid == false then return end
 		local temperature = v.interface.temperature
@@ -326,12 +326,12 @@ end)
     storage.table_index[type] = flib_table.for_n_of(
       table,storage.table_index[type], update_budget,
       function(v)
-        thermal_system_core.thermal_update_machine(v,base_temperature_increase_per_tick,max_working_temp,max_safe_temp,delta_time)
+        TFMG_thermal_core.thermal_update_machine(v,base_temperature_increase_per_tick,max_working_temp,max_safe_temp,delta_time)
       end
     )
   end
 
-  function thermal_system_core.thermal_update(event)
+  function TFMG_thermal_core.thermal_update(event)
     local tick = event.tick
       run_scheduled_events(tick)
 
@@ -343,4 +343,4 @@ end)
     --game.print(serpent.block(storage.registered_entities))
   end
 
-return thermal_system_core
+return TFMG_thermal_core

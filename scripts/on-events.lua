@@ -1,5 +1,5 @@
-thermal_system_core = require("scripts.thermal-system-core")
-thermal_system_gui = require("scripts.thermal-system-gui")
+TFMG_thermal_core = require("scripts.TFMG-thermal-core")
+TFMG_thermal_gui = require("scripts.TFMG-thermal-gui")
 
 local function build_thermal_entity_filter()--set the build event filters. This has to be done after the build event has been registered.
   local filters = {}
@@ -72,69 +72,69 @@ end)
 script.on_event(
   defines.events.on_built_entity,
   function(event)
-    thermal_system_core.handle_build_event(event)
+    TFMG_thermal_core.handle_build_event(event)
   end
 )
 script.on_event(
   defines.events.on_robot_built_entity,
   function(event)
-    thermal_system_core.handle_build_event(event)
+    TFMG_thermal_core.handle_build_event(event)
   end
 )
 script.on_event(
   defines.events.on_space_platform_built_entity,
   function(event)
-    thermal_system_core.handle_build_event(event)
+    TFMG_thermal_core.handle_build_event(event)
   end
 )
 script.on_event(
   defines.events.on_entity_cloned,
   function(event)
-    thermal_system_core.handle_build_event(event)
+    TFMG_thermal_core.handle_build_event(event)
   end
 )
 script.on_event(
   defines.events.on_pre_ghost_deconstructed,
   function(event)
-    thermal_system_core.handle_ghost_deconstruction_event(event)
+    TFMG_thermal_core.handle_ghost_deconstruction_event(event)
   end
 )
 script.on_event(
   defines.events.script_raised_built,
   function(event)
-    thermal_system_core.handle_bp_proxy_build_event(event)
+    TFMG_thermal_core.handle_bp_proxy_build_event(event)
   end,{{filter = "name", name = "TFMG-thermal-bp-proxy"}}
 )
 --destroy events
 script.on_event(
 	defines.events.on_object_destroyed,
 	function(event)
-		thermal_system_core.handle_destroy_event(event)
-    thermal_system_gui.gui_cleanup(event)
+		TFMG_thermal_core.handle_destroy_event(event)
+    TFMG_thermal_gui.gui_cleanup(event)
 	end
 )
 script.on_event("interface-rotate",
   function (event)
     local transform = "rotate"
-    thermal_system_core.handle_transform(event,transform)
+    TFMG_thermal_core.handle_transform(event,transform)
   end
 )
 script.on_event("interface-rotate-reverse",
   function (event)
     local transform = "rotate_reverse"
-    thermal_system_core.handle_transform(event,transform)
+    TFMG_thermal_core.handle_transform(event,transform)
   end
 )
 script.on_event("interface-flip-horizontal",
   function (event)
     local transform = "flip_horizontal"
-    thermal_system_core.handle_transform(event,transform)
+    TFMG_thermal_core.handle_transform(event,transform)
   end
 )
 script.on_event("interface-flip-vertical",
   function (event)
     local transform = "flip_vertical"
-    thermal_system_core.handle_transform(event,transform)
+    TFMG_thermal_core.handle_transform(event,transform)
   end
 )
 
@@ -144,8 +144,8 @@ script.on_event("interface-flip-vertical",
 script.on_event(
   defines.events.on_tick,--Its HaNlDeR sHoUldNt InCluDe PeRfOrMaNce HeAvY CoDe. You cant tell me what to do.
   function(event)
-    thermal_system_core.thermal_update(event)
-    thermal_system_gui.on_gui_tick()
+    TFMG_thermal_core.thermal_update(event)
+    TFMG_thermal_gui.on_gui_tick()
   end
 )
 
@@ -153,13 +153,13 @@ script.on_event(
 
 script.on_event(defines.events.on_player_created, 
 function(event)
-	thermal_system_gui.on_player_join(event)
+	TFMG_thermal_gui.on_player_join(event)
 end)
 
 script.on_event(defines.events.on_gui_opened,
   function(event)
     if event.gui_type == defines.gui_type.entity then
-	  	thermal_system_gui.gui_open(event)
+	  	TFMG_thermal_gui.gui_open(event)
     end
   end
 )
@@ -167,7 +167,7 @@ script.on_event(defines.events.on_gui_opened,
 script.on_event(defines.events.on_gui_closed,
   function(event)
 	  if event.gui_type == defines.gui_type.entity then
-		thermal_system_gui.gui_close(event)
+		TFMG_thermal_gui.gui_close(event)
 	  end
   end
 )

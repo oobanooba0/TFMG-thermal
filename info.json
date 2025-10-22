@@ -1,7 +1,7 @@
 {
   "name": "TFMG-thermal",
-  "version": "0.2.0",
-  "title": "TFMG Thermal",
+  "version": "0.2.1",
+  "title": "TFMG Thermal Library",
   "author": "oobanooba",
   "factorio_version": "2.0",
   "dependencies": [

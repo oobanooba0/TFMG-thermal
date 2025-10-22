@@ -1,4 +1,4 @@
-local thermal_system_gui = {}
+local TFMG_thermal_gui = {}
 
 ---currently using the old sketchy gui system as its better than nothing when it comes to debug.
 
@@ -32,12 +32,12 @@ local function collect_interface_entry(machine,player_storage)--will gather the 
   end
 return gui_storage end
 
-function thermal_system_gui.on_player_join(event)
+function TFMG_thermal_gui.on_player_join(event)
   local player = game.players[event.player_index]
 	storage.players[player.index] = {}--initialise player storage
 end
 
-function thermal_system_gui.gui_open(event)
+function TFMG_thermal_gui.gui_open(event)
 	
   local machine = event.entity
   if prototypes.mod_data["TFMG-thermal-"..machine.name] == nil then return end --first check, make sure this is a thermal entity.
@@ -62,7 +62,7 @@ function thermal_system_gui.gui_open(event)
 
 end
 
-function thermal_system_gui.gui_close(event)
+function TFMG_thermal_gui.gui_close(event)
   local gui_storage = storage.players[event.player_index].gui
   if gui_storage == nil then return end
 	if gui_storage.gui == nil then return end
@@ -71,7 +71,7 @@ function thermal_system_gui.gui_close(event)
 	gui_storage = nil
 end
 
-function thermal_system_gui.gui_cleanup(event)
+function TFMG_thermal_gui.gui_cleanup(event)
 	local players = game.connected_players
 	for _ , v in pairs(players) do
 		local gui_storage = storage.players[v.index].gui
@@ -82,7 +82,7 @@ function thermal_system_gui.gui_cleanup(event)
 	end
 end
 
-function thermal_system_gui.on_gui_tick()
+function TFMG_thermal_gui.on_gui_tick()
 	local players = game.connected_players
   for _ , v in pairs(players) do
 		local gui_storage = storage.players[v.index].gui
@@ -106,4 +106,4 @@ end
 
 
 
-return thermal_system_gui
+return TFMG_thermal_gui

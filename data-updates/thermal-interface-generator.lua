@@ -1,4 +1,4 @@
---this file contains all the code used to read the thermal_system information from your machine prototypes and generate the theramal interface prototypes, as well as prepare the mod data tables and pre-calculate energy usage.
+--this file contains all the code used to read the TFMG_thermal information from your machine prototypes and generate the theramal interface prototypes, as well as prepare the mod data tables and pre-calculate energy usage.
 --Nothing in here is all too important for you to understand.
 
 --sanity checks and error logging
@@ -122,7 +122,7 @@ return icons end
 
 --Generate the initial heat pipe connections for the north varient of the machine, either from a connection set prototype, or by generating one from scratch
   local function generate_thermal_interface_connections(machine)
-    if not machine.thermal_system.connections then -- if no connections are defined, we shall generate one automagically
+    if not machine.TFMG_thermal.connections then -- if no connections are defined, we shall generate one automagically
       --We're gonna find the coordinates of the center of the x most, and y most tiles of the collision box.
       local machine_box = machine.collision_box
       local x_max = semifloor(machine_box[2][1])
@@ -150,7 +150,7 @@ return icons end
       table.insert(connections,{ position = {x_min, y_min}, direction = 12 })
       end
 
-    else connections = machine.thermal_system.connections end --Else use the connection set defined in the entity prototype.
+    else connections = machine.TFMG_thermal.connections end --Else use the connection set defined in the entity prototype.
   return connections end
 
   local function generate_thermal_interface_connection_set(machine)--generate all 8 rotations and mirrorings of the connection by generating a north facing connection set, and then flipping and rotating.
@@ -215,11 +215,11 @@ return icons end
     end
   return true end --if all conditions have passed, then we return true.
 
-  local function thermal_system_locations(machine)--Generate a string that lists all the locations the thermal system will apply to this machine, in the form of nice planet icons.
+  local function TFMG_thermal_locations(machine)--Generate a string that lists all the locations the thermal system will apply to this machine, in the form of nice planet icons.
     local locations = ""
     local location_passes = 0
     local locations_listed = 0
-    local conditions = machine.thermal_system.surface_conditions
+    local conditions = machine.TFMG_thermal.surface_conditions
     if surface_condition_compare(data.raw["surface"]["space-platform"],conditions) == true then --check if can be placed on platforms. This is seperate since space platforms arent planets, but do have their own surface conditions.
       locations = locations.."[item=space-platform-foundation]"
       location_passes = location_passes + 1
@@ -232,7 +232,7 @@ return icons end
       end
     end
     if table_size(data.raw["planet"]) + 1 == location_passes then --If we pass every single planet check, then we know the thermal system will apply on every planet, so we just say "everything"
-      locations = {"thermal-system.all-locations"}
+      locations = {"TFMG-thermal.all-locations"}
       return locations end
     for _ , surface in pairs(data.raw["planet"]) do --go through every planet prototype again, but this time, we're gonna build up our string of locations, making sure to stop before we hit 200 characters, which is the limit for custom tooltips.
       if surface_condition_compare(surface,conditions) == true then
@@ -245,10 +245,10 @@ return icons end
   return locations end
 
   local function build_and_check_surface_conditions(machine)--for the most part handles correcting any missing information in a surface condition table
-    if not machine.thermal_system.surface_conditions then return end
+    if not machine.TFMG_thermal.surface_conditions then return end
     surface_conditions = {}
-    for _ , prototype_condition in pairs(machine.thermal_system.surface_conditions) do
-      if not prototype_condition.property then log_thermal_interface_error("a surface condition property must be specified to evaluate thermal_system surface conditions. Check prototype:"..machine.name) return end
+    for _ , prototype_condition in pairs(machine.TFMG_thermal.surface_conditions) do
+      if not prototype_condition.property then log_thermal_interface_error("a surface condition property must be specified to evaluate TFMG_thermal surface conditions. Check prototype:"..machine.name) return end
       local new_surface_condition = {
         property = prototype_condition.property,
         min = prototype_condition.min or 0,
@@ -269,7 +269,7 @@ return icons end
 
 --generate a thermal interfaces, and add it to data.raw
   local function generate_thermal_interface(machine)
-    if not machine.thermal_system then return end -- Check if machine is opted into the thermal system.
+    if not machine.TFMG_thermal then return end -- Check if machine is opted into the thermal system.
     local specific_heat = calculate_machine_footprint(machine)*1000000 --in joules. 1MJ, likely will be based on the footprint of the machine.
     local connection_set = generate_thermal_interface_connection_set(machine)
     local collision_set = generate_thermal_interface_collision_box_set(machine)
@@ -277,7 +277,7 @@ return icons end
     if feature_flags["space_travel"] then--only if we have space age features enabled can we use surface conditions. Surface conditions are stored in the interface prototype, dispite this actually not having any direct effect. Surface conditions dont affect entities placed by script.
       surface_conditions = build_and_check_surface_conditions(machine)
     end
-    machine.thermal_system.surface_conditions = surface_conditions
+    machine.TFMG_thermal.surface_conditions = surface_conditions
     for direction, connections in pairs(connection_set) do
       local interface = {--machine interface template
         type = "reactor",
@@ -311,9 +311,9 @@ return icons end
     end
     
     --gather information we will put into a mod data table to recall during runtime.
-    local heat_ratio = machine.thermal_system.heat_ratio or 0.5
-    local max_working_temperature = machine.thermal_system.max_working_temperature or 250
-    local max_safe_temperature = machine.thermal_system.max_safe_temperature or 350
+    local heat_ratio = machine.TFMG_thermal.heat_ratio or 0.5
+    local max_working_temperature = machine.TFMG_thermal.max_working_temperature or 250
+    local max_safe_temperature = machine.TFMG_thermal.max_safe_temperature or 350
     local energy_usage_per_tick = util.parse_energy(machine.energy_usage) -- in joules
     local base_heat_output = energy_usage_per_tick*heat_ratio*60--in W
     local base_temperature_increase_per_tick = (energy_usage_per_tick*heat_ratio)/(specific_heat)--precalculate the per tick base heat output of the machine. That way we don't need to calculate it in runtime.
@@ -348,24 +348,24 @@ return icons end
     -- now add our custom tooltips
     if not machine.custom_tooltip_fields then machine.custom_tooltip_fields = {} end
     table.insert(machine.custom_tooltip_fields,{
-      name = {"thermal-system.max-temperature"},
-      value = {"thermal-system.machine-max-temperature",tostring(max_working_temperature)},
+      name = {"TFMG-thermal.max-temperature"},
+      value = {"TFMG-thermal.machine-max-temperature",tostring(max_working_temperature)},
       order = 252,
     })
     table.insert(machine.custom_tooltip_fields,{
-      name = {"thermal-system.max-safe-temperature"},
-      value = {"thermal-system.machine-max-safe-temperature",tostring(max_safe_temperature)},
+      name = {"TFMG-thermal.max-safe-temperature"},
+      value = {"TFMG-thermal.machine-max-safe-temperature",tostring(max_safe_temperature)},
       order = 253,
     })
     table.insert(machine.custom_tooltip_fields,{
-      name = {"thermal-system.efficiency"},
-      value = {"thermal-system.machine-efficiency",tostring(heat_ratio*100)},
+      name = {"TFMG-thermal.efficiency"},
+      value = {"TFMG-thermal.machine-efficiency",tostring(heat_ratio*100)},
       order = 254,
     })
     if feature_flags["space_travel"] then--we only care about what planets the thermal system applies on if we have spage
       table.insert(machine.custom_tooltip_fields,{
-        name = {"thermal-system.thermal-locations"},
-        value = thermal_system_locations(machine),
+        name = {"TFMG-thermal.thermal-locations"},
+        value = TFMG_thermal_locations(machine),
         order = 255,
       })
     end

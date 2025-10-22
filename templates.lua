@@ -1,7 +1,7 @@
 --To apply the thermal system to a building you should include in its prototype.
 --Data stage Prototypes are the only thing you should need to deal with when creating thermal entites. Scripting is not required, the library can handle everything else automatically.
 
-thermal_system = {}
+TFMG_thermal = {}
 
 --the table doesn't need to contain anything, as all of its components are optional, anything not defined will fall back on default values. the existance of the table is considered an implicit opt in for the system
 --there are some limitations, only "assembling-machine", "furnace", "lab", "mining-drill" and "beacon" prototypes are supported right now, other prototypes will ignore the thermal system.
@@ -9,9 +9,9 @@ thermal_system = {}
 --The thermal system will automatically generate the heat pipe connections, compound entites, and default properties of the system, no futher input is required.
 
 
---the complete thermal system prototype looks like this
+--the complete TFMG_thermal prototype looks like this
 
-thermal_system = {
+TFMG_thermal = {
   --Surface conditions operate just like surface conditions do for any other entity. If the surface conditions are met when the parent prototype is placed, the thermal system will apply
   --surface conditions are formatted exactly like its vanilla equivalent.
   --if surface conditions is not defined, the thermal system will apply everwhere. (default thermal system surface conditions setting coming soon)
@@ -27,7 +27,7 @@ thermal_system = {
   --the connection set is used to generate the heat interface prototypes (which are reactors, hence the identical set), in addition, TFMG Thermal will automatically handle the generation of rotated and mirrored varients of the prototypes.
   --if not defined, connections will default to two heat pipes per side, located on the corners of the machine. (1x1 machines only have room for one connection on each side, and naturally get 4)
   connections = {
-    { position = {x, y}, direction = defines.direction.north },
+    { position = {x, y}, direction = defines.direction.north }, --The order, direction and quantity is totally arbitrary, you are limited to 32 connections.
     { position = {x, y}, direction = defines.direction.east },
     { position = {x, y}, direction = defines.direction.south },
     { position = {x, y}, direction = defines.direction.west },
@@ -55,7 +55,4 @@ thermal_system = {
 
 --additional notes:
   --Machine specific heat is calculated based on the footprint of the machine, A machine has a heat capacity equivilent to the same amount of space in heat pipes. or 1MJ per tile.
-  --This means larger machines will take longer to heat up, they have a larger thermal mass.
-
---limitations
-  --Machines that do not rotate wont have rotatable thermal interfaces. (I am trying to solve this, but its a very complicated problem)
+  --This means larger machines will take longer to heat up, as they have a larger thermal mass.

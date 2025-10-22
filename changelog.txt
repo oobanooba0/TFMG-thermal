@@ -1,4 +1,9 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.2.1
+Date: 2025-10-22
+  Changes:
+    - Thermal systems in machines are now defined by TFMG_thermal = {} instaid of thermal_system = {}. This is to prevent any accidental namespace overlaps by any other mod. TFMG_thermal is fairly unambiguous.
+---------------------------------------------------------------------------------------------------
 Version: 0.2.0
 Date: 2025-10-20
   Features:
