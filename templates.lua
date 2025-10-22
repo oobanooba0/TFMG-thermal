@@ -17,9 +17,9 @@ thermal_system = {
   --if surface conditions is not defined, the thermal system will apply everwhere. (default thermal system surface conditions setting coming soon)
   surface_conditions = {
     {
-      property = "property-name",
-      max = number,
-      min = number,
+      property = "property-name",--this is mandatory
+      min = number,--optional, defaults to 0
+      max = number,--optional defaults to math.big (infinity)
     }
   },
 
