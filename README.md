@@ -1,6 +1,7 @@
 The thermal system for TFMG.
 
 --Main mod--
+
 [TFMG](https://github.com/oobanooba0/TFMG)
 
 What does TFMG thermal do?
@@ -13,12 +14,14 @@ The addition of heat pipes, radiators and various heat control systems can add a
 
 Take a look at these mods to see the thermal system in action:
 [TFMG](https://mods.factorio.com/mod/TFMG)
-[Thermal-Expansion-Vanilla](https://mods.factorio.com/mod/TFMG](https://mods.factorio.com/mod/thermal-expansion-vanilla)
+[Thermal Expansion Vanilla](https://mods.factorio.com/mod/thermal-expansion-vanilla)
 
 
 
 
 How to use TFMG thermal in your mod:
+
+[Detailed Explanation of TFMG_thermal in templates.lua](https://github.com/oobanooba0/TFMG-thermal/blob/main/templates.lua)
 
 TFMG thermal has been designed to be easy to use and intuitive. I handle all the annoying scripting, blueprinting, GUI and compound entity business. So you can focus on how your mechanics play.
 
@@ -26,7 +29,33 @@ All interaction with TFMG thermal is done in your prototypes. The process is sim
 
 To start with, the bare minimum requirement for the thermal system to be applied to a machine is:
 
-TFMG_thermal = {}
+```TFMG_thermal = {}```
 
-The table doesn't need to contain anything, as all of its components are optional; anything not defined will fall back on default values. The existence of the table is considered an implicit opt-in for the system
-There are some limitations; only "assembling-machine", "furnace", "lab", "mining-drill" and "beacon" prototypes are supported right now, other prototypes will ignore the thermal system.
+Without anything defined within this table, TFMG Thermal will detect the existence of the table during data-updates, and treat it as an implied opt-in
+
+Within it, you can define various properties:
+
+```
+TFMG_thermal = {
+  max_working_temperature = number,
+  max_safe_temperature = number,
+  heat_ratio = number,
+  connections = {
+    { position = {x, y}, direction = defines.direction.north },
+    { position = {x, y}, direction = defines.direction.east },
+    { position = {x, y}, direction = defines.direction.south },
+    { position = {x, y}, direction = defines.direction.west },
+  }
+},
+surface_conditions = {
+  {
+    property = "property-name",
+    min = number,
+    max = number
+  }
+},
+```
+
+When any of these properties are not defined, as in the original example (`TFMG_thermal = {}`), they are automatically populated by a default value.
+
+For more details into how to use TFMG_thermal, look into [templates.lua](https://github.com/oobanooba0/TFMG-thermal/blob/main/templates.lua)
