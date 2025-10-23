@@ -12,7 +12,7 @@
     return end
   return true end
 
----Heat interface connection graphic definitions
+--Heat interface connection graphic definitions
   local heat_pipe_connected = {--connected
     {size = 64, filename = "__base__/graphics/entity/heat-pipe/heat-pipe-straight-vertical-1.png", scale = 0.5},
     {size = 64, filename = "__base__/graphics/entity/heat-pipe/heat-pipe-straight-horizontal-1.png", scale = 0.5},
@@ -53,8 +53,7 @@
   elseif machine.icons then
     icons = util.combine_icons(icons, machine.icons, {scale = 0.5}, icon_size)
   end
-return icons end
-
+  return icons end
 --math and coordinate transform functions
   local function semifloor(number)--Round down number to the nearest 0.5
   return math.floor(number*2)/2 end
@@ -177,7 +176,7 @@ return icons end
     end
   return collision_box_set end
 
-   local function calculate_machine_footprint(machine)--calculate the number of tiles a machine takes up.
+  local function calculate_machine_footprint(machine)--calculate the number of tiles a machine takes up.
     local machine_box = machine.collision_box
     --We're gonna find number of tiles a machine takes up, so we have to round outwards to thhe outer corners of the tile.
     local x_max = semiceil(machine_box[2][1])
@@ -267,10 +266,21 @@ return icons end
     end
   return rotation_ruleset, rotation_ruleset_world end
 
+  local function calculate_specific_heat(machine)--we're gonna calculate the specific heat capacity for the machine based on some of its properties.
+    local specific_heat
+    if machine.TFMG_thermal.specific_heat then 
+      if type(machine.TFMG_thermal.specific_heat) ~= "string" then log_thermal_interface_error("specific heat should be formatted as string. Check: "..machine.name) return end
+      specific_heat = util.parse_energy(machine.TFMG_thermal.specific_heat)
+    else
+      if not data.raw["heat-pipe"]["heat-pipe"] then log_thermal_interface_error("a heat pipe prototype must exist for thermal interface specific heat calculation to be possible.") return end
+      specific_heat = calculate_machine_footprint(machine)*util.parse_energy(data.raw["heat-pipe"]["heat-pipe"].heat_buffer.specific_heat)
+    end
+  return specific_heat end
+
 --generate a thermal interfaces, and add it to data.raw
   local function generate_thermal_interface(machine)
-    if not machine.TFMG_thermal then return end -- Check if machine is opted into the thermal system.
-    local specific_heat = calculate_machine_footprint(machine)*1000000 --in joules. 1MJ, likely will be based on the footprint of the machine.
+    if not machine.TFMG_thermal then return end -- Check if machine is opted into the thermal system. 
+    local specific_heat = calculate_specific_heat(machine)
     local connection_set = generate_thermal_interface_connection_set(machine)
     local collision_set = generate_thermal_interface_collision_box_set(machine)
     local surface_conditions = nil
@@ -305,8 +315,11 @@ return icons end
           connections = connections--we shall connect the world.
         },
       }
+
       generate_heat_patches_from_connections(interface.heat_buffer.connections,interface)
+
       if feature_flags["space_travel"] then interface.surface_conditions = surface_conditions end
+
       data:extend({interface})
     end
     
@@ -341,6 +354,7 @@ return icons end
         rotation_ruleset = rotation_ruleset,
         rotation_ruleset_world = rotation_ruleset_world,
         surface_conditions = surface_conditions,
+        specific_heat = (specific_heat/1000000).."MJ",
       }
     }
     data:extend({machine_data})
@@ -370,8 +384,7 @@ return icons end
       })
     end
   end
-
-  ---go through all entities in a prototype category and run generate_thermal_interface for each of them.
+---go through all entities in a prototype category and run generate_thermal_interface for each of them.
   local function generate_thermal_interfaces(machines)
     if not can_generate_thermal_interfaces(machines) then return end --End if we fail sanity check
     for name, machine in pairs(machines) do -- run this script for every machine prototype
@@ -380,8 +393,8 @@ return icons end
   end
 
 --Finally, generate thermal interfaces for these categories.
-generate_thermal_interfaces(data.raw["assembling-machine"])
-generate_thermal_interfaces(data.raw["furnace"])
-generate_thermal_interfaces(data.raw["lab"])
-generate_thermal_interfaces(data.raw["beacon"])
-generate_thermal_interfaces(data.raw["mining-drill"])
+  generate_thermal_interfaces(data.raw["assembling-machine"])
+  generate_thermal_interfaces(data.raw["furnace"])
+  generate_thermal_interfaces(data.raw["lab"])
+  generate_thermal_interfaces(data.raw["beacon"])
+  generate_thermal_interfaces(data.raw["mining-drill"])

@@ -1,4 +1,10 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.2.2
+Date: ????
+  Changes:
+    - Specific heat can now be specified
+    - Default specific heat is now based on the specific heat of the heat pipe
+---------------------------------------------------------------------------------------------------
 Version: 0.2.1
 Date: 2025-10-22
   Changes:

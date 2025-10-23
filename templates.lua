@@ -51,6 +51,10 @@ TFMG_thermal = {
   --default setting is 10 degrees less than the max working temperature of the machine, or 240 degrees if max working temperature isn't defined.
   default_temperature = number,
 
+  --specific heat controls the specific heat of the machines thermal interface.
+  --default value is the machines footprint * the specific heat pipe of a heat pipe. This means machines, by default, have the same thermal mass as their footprint in heat pipes.
+  specific_heat = "energy" --Like all other energy prototypes.
+
 }
 
 --additional notes:
