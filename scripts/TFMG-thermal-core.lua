@@ -9,6 +9,7 @@ local flib_table = require("__flib__/table")
   --r = Rotatable, but 180 degrees.
   --F = flippable,
   --08 = 8 unique variations
+  --00 = 1 unique directions
 
   --we index each sequence of orientations by initial orientation, to next orientation.
 
@@ -24,6 +25,12 @@ local flib_table = require("__flib__/table")
       rotate_reverse = {3,4,1,2,7,8,5,6},
       flip_horizontal = {5,8,7,6,1,4,3,2},
       flip_vertical = {7,6,5,8,3,2,1,4},
+    },
+    _01 = {
+      rotate = {1},
+      rotate_reverse = {1},
+      flip_horizontal = {1},
+      flip_vertical = {1},
     },
   }
 
@@ -43,14 +50,15 @@ function TFMG_thermal_core.surface_condition_compare(surface,conditions)--condit
     --gather important data
     local machine = entity or event.entity
     if machine.valid == false then return game.print("tried to build invalid machine")  end
+    
+    local thermal_prototype = prototypes.mod_data["TFMG-thermal-"..machine.name].data
+    game.print(serpent.block(thermal_prototype))
     local surface = machine.surface
-
     local bp_proxy = surface.find_entity("TFMG-thermal-bp-proxy",machine.position)
     if bp_proxy then
         direction = (math.floor(bp_proxy.color.r*255))
       bp_proxy.destroy()
     end
-
     --get direction information
     if direction == nil then --if no direction information is provided
       if event and event.tags and event.tags.thermal_direction then
@@ -64,14 +72,12 @@ function TFMG_thermal_core.surface_condition_compare(surface,conditions)--condit
     --Deal with surface conditions
     local interface_prototype = prototypes.entity[machine.name .. "-thermal-interface"..direction]
     local conditions = interface_prototype.surface_conditions
-
     if TFMG_thermal_core.surface_condition_compare(surface,conditions) == false then return end --You shall not pass
    
-    local _reg_number, unit_number, _type = script.register_on_object_destroyed(machine) --register destruction event
-    local thermal_prototype = prototypes.mod_data["TFMG-thermal-"..machine.name].data
-    --game.print(serpent.block(thermal_prototype))
+
   	local interface = machine.surface.create_entity({name = machine.name .. "-thermal-interface"..direction,position = machine.position, force = machine.force })
     if interface == nil then return game.print("entity wasnt created") end
+    local _reg_number, unit_number, _type = script.register_on_object_destroyed(machine) --register destruction event
   	interface.disabled_by_script = true
     local temperature = temperature or thermal_prototype.default_temperature
   	interface.temperature = temperature
@@ -109,6 +115,7 @@ function TFMG_thermal_core.surface_condition_compare(surface,conditions)--condit
 
   function TFMG_thermal_core.handle_bp_proxy_build_event(event)
     TFMG_thermal_core.schedule_event(event.tick+1,"bp_proxy",event)
+    game.print("bpproxyexistend")
   end
 
   function TFMG_thermal_core.handle_bp_proxy(event)
@@ -141,6 +148,7 @@ function TFMG_thermal_core.surface_condition_compare(surface,conditions)--condit
     local v,machine = get_entry_from_input_event(event)
     if v == nil then return end
     local rotation_ruleset = prototypes.mod_data["TFMG-thermal-"..event.selected_prototype.name].data.rotation_ruleset_world
+    if rotation_ruleset == "_01" then return end --dont rotate if not rotatable.
     if ruleset_lookup[rotation_ruleset] == nil then return game.print("ruleset "..rotation_ruleset.." does not exist.") end
     local new_direction = ruleset_lookup[rotation_ruleset][transform][v.direction] -- look up the new rotation from the table.
     if new_direction == nil then return game.print("no new direction found") end
@@ -183,6 +191,7 @@ function TFMG_thermal_core.surface_condition_compare(surface,conditions)--condit
   local function blueprint_entity_filter(bp_entity)
     local bp_entity_name = bp_entity.name
     if not prototypes.mod_data["TFMG-thermal-"..bp_entity_name] then return false end --Check if we have a thermal system mod data entry corresponding to the entity, if not, our script can ignore this.
+    if prototypes.mod_data["TFMG-thermal-"..bp_entity_name].data.rotation_ruleset == "_01" then return false end --we dont need to do any blueprint stuff if our building isnt rotatable.
     return true
   end
 
@@ -234,33 +243,33 @@ function TFMG_thermal_core.surface_condition_compare(surface,conditions)--condit
       end
     end
   end
--- When a blueprint containing your custom entity is stamped down over an
--- existing entity, use the tags stored in the blueprint to update your
--- entity's state.
-script.on_event(defines.events.on_pre_build, function(event)
-	local bp_build = BlueprintBuild:new(event)
-	-- Will be `nil` if the event was not a blueprint build.
-	if not bp_build then return end
-  
-  local bp_entities = bp_build:get_entities() --[[@as BlueprintEntity[] ]]
-  if not bp_entities then return end --if a blueprint has no entities, then we should quit here.
-  local bp_locations = bp_build:map_blueprint_indices_to_world_positions()
-  --game.print(serpent.block(bp_locations))
-  apply_place_rotation(event,bp_entities,bp_locations,bp_build.surface)
+  -- When a blueprint containing your custom entity is stamped down over an
+  -- existing entity, use the tags stored in the blueprint to update your
+  -- entity's state.
+  script.on_event(defines.events.on_pre_build, function(event)
+  	local bp_build = BlueprintBuild:new(event)
+  	-- Will be `nil` if the event was not a blueprint build.
+  	if not bp_build then return end
 
-	-- Get entities in the blueprint that (1) match your custom entity and
-	-- (2) are being placed over existing entities.
-	local overlap_map = bp_build:map_blueprint_indices_to_overlapping_entities(
-		blueprint_entity_filter
-	)
-	if not overlap_map or (not next(overlap_map)) then return end
-	-- Map blueprint tags on to the entities
-	
-	for bp_index, entity in pairs(overlap_map) do
-		local tags = bp_entities[bp_index].tags or {}
-		apply_blueprint_tags_replace(tags, entity)
-	end
-end)
+    local bp_entities = bp_build:get_entities() --[[@as BlueprintEntity[] ]]
+    if not bp_entities then return end --if a blueprint has no entities, then we should quit here.
+    local bp_locations = bp_build:map_blueprint_indices_to_world_positions()
+    --game.print(serpent.block(bp_locations))
+    apply_place_rotation(event,bp_entities,bp_locations,bp_build.surface)
+
+  	-- Get entities in the blueprint that (1) match your custom entity and
+  	-- (2) are being placed over existing entities.
+  	local overlap_map = bp_build:map_blueprint_indices_to_overlapping_entities(
+  		blueprint_entity_filter
+  	)
+  	if not overlap_map or (not next(overlap_map)) then return end
+  	-- Map blueprint tags on to the entities
+  
+  	for bp_index, entity in pairs(overlap_map) do
+  		local tags = bp_entities[bp_index].tags or {}
+  		apply_blueprint_tags_replace(tags, entity)
+  	end
+  end)
 
 
 --thermal system tick updates

@@ -152,6 +152,26 @@
     else connections = machine.TFMG_thermal.connections end --Else use the connection set defined in the entity prototype.
   return connections end
 
+  local function generate_thermal_interface_connections_thruster(machine)
+    if not machine.TFMG_thermal.connections then -- if no connections are defined, we shall generate one automagically
+      --We're gonna find the coordinates of the center of the x most, and y most tiles of the collision box.
+      local machine_box = machine.collision_box
+      local x_max = semifloor(machine_box[2][1])
+      local x_min = semiceil(machine_box[1][1])
+      local y_min = semiceil(machine_box[1][2])
+
+      --basically the same process as generating for normal machines, but we only bother with the top connections.
+
+      connections = {
+        { position = {x_min, y_min}, direction = 0 },
+      }
+      if x_max - x_min > 0 then--if our north and south side length is large enough then we add our second corner connetions.
+      table.insert(connections,{ position = {x_max, y_min}, direction = 0 })
+      end
+
+    else connections = machine.TFMG_thermal.connections end --Else use the connection set defined in the entity prototype.
+  return connections end
+
   local function generate_thermal_interface_connection_set(machine)--generate all 8 rotations and mirrorings of the connection by generating a north facing connection set, and then flipping and rotating.
     local connections = generate_thermal_interface_connections(machine)--generate north connection set
     local connection_set = {}
@@ -345,6 +365,7 @@
       name = "TFMG-thermal-"..machine.name,
       data = {
         name = machine.name,
+        type = "crafting-machine",
         max_working_temperature = max_working_temperature,
         max_safe_temperature = max_safe_temperature,
         base_temperature_increase_per_tick = base_temperature_increase_per_tick,--this is in degrees per tick. This is actually the important value, heat ratio and heat output arent actually used when calculating the thermal scripts.
@@ -384,11 +405,108 @@
       })
     end
   end
+--generate thermal interfaces for thrusters. They cannot be rotated and lack many properties that crafting machines do.
+  local function generate_thermal_interface_thruster(machine)
+    if not machine.TFMG_thermal then return end -- Check if machine is opted into the thermal system. 
+    local specific_heat = calculate_specific_heat(machine)
+    local connections = generate_thermal_interface_connections_thruster(machine)
+    local collision_box = machine.collision_box
+    machine.TFMG_thermal.surface_conditions = surface_conditions
+    local interface = {--machine interface template
+      type = "reactor",
+      name = machine.name .. "-thermal-interface".."1",
+      localised_name = {"entity-name.thermal-interface", machine.localised_name or {"entity-name."..machine.name}},
+      order = "y"..machine.type,
+      icons = generate_thermal_interface_icons(machine),
+      flags = {"placeable-neutral", "player-creation","not-on-map","not-blueprintable","not-deconstructable","no-automated-item-insertion","no-automated-item-removal"},
+      collision_mask = {layers ={}}, --the interface does not concern itself with the plight of lesser entities.
+      collision_box = collision_box,
+      selection_box = {{-1,-1},{1,1}},
+      selection_priority = 250,
+      selectable_in_game = true,
+      allow_copy_paste = false,
+      hidden = true,
+      consumption = "1W", -- this is actually irrelevant, but its required by the reactor prototype.
+      energy_source = { --also irrelevant, since interfaces are disabled by script at birth, but wube demands it.
+        type = "void",
+      },
+      heat_buffer = {
+        max_temperature = 1000,--These two values just match heat pipes, and should be fine in pretty much all sane use cases.
+        minimum_glow_temperature = 350,
+        specific_heat = specific_heat.."J",
+        max_transfer = "100TW",--Ultimately, this will be limited more by connections than anything else.
+        connections = connections--we shall connect the world.
+      },
+    }
+    generate_heat_patches_from_connections(interface.heat_buffer.connections,interface)
+    data:extend({interface})
+    
+    --gather information we will put into a mod data table to recall during runtime.
+    local heat_ratio = machine.TFMG_thermal.heat_ratio or 0.5
+    local max_working_temperature = machine.TFMG_thermal.max_working_temperature or 750
+    local max_safe_temperature = machine.TFMG_thermal.max_safe_temperature or 850
+    local energy_usage_per_tick = util.parse_energy(machine.TFMG_thermal.heat_output or "10MW") -- in joules
+    local base_heat_output = energy_usage_per_tick*60--in W
+    local base_temperature_increase_per_tick = (energy_usage_per_tick*heat_ratio)/(specific_heat)--precalculate the per tick base heat output of the machine. That way we don't need to calculate it in runtime.
+    local default_temperature = 0
+    if max_working_temperature >= max_safe_temperature then
+      default_temperature = max_safe_temperature - 10
+    else
+      default_temperature = max_working_temperature - 10
+    end
+
+    local rotation_ruleset, rotation_ruleset_world = set_rotation_rules(machine)
+
+    local machine_data = {--this information we take into runtime, since we need it for scripts or for gui.
+      type = "mod-data",
+      data_type = "TFMG-thermal.thermal-interface",
+      name = "TFMG-thermal-"..machine.name,
+      data = {
+        name = machine.name,
+        type = "thruster",
+        max_working_temperature = max_working_temperature,
+        max_safe_temperature = max_safe_temperature,
+        base_temperature_increase_per_tick = base_temperature_increase_per_tick,--this is in degrees per tick. This is actually the important value, heat ratio and heat output arent actually used when calculating the thermal scripts.
+        base_heat_output = base_heat_output,--we still keep these cause theyre useful for gui, and its easy to grab them from here.
+        default_temperature = default_temperature,
+        rotation_ruleset = "_01",
+        rotation_ruleset_world = "_01",
+        surface_conditions = nil, --thrusters can only built on platforms, surface conditions are never relevant.
+        specific_heat = (specific_heat/1000000).."MJ",
+      }
+    }
+    data:extend({machine_data})
+
+    -- now add our custom tooltips
+    if not machine.custom_tooltip_fields then machine.custom_tooltip_fields = {} end
+    table.insert(machine.custom_tooltip_fields,{
+      name = {"TFMG-thermal.max-temperature"},
+      value = {"TFMG-thermal.machine-max-temperature",tostring(max_working_temperature)},
+      order = 252,
+    })
+    table.insert(machine.custom_tooltip_fields,{
+      name = {"TFMG-thermal.max-safe-temperature"},
+      value = {"TFMG-thermal.machine-max-safe-temperature",tostring(max_safe_temperature)},
+      order = 253,
+    })
+    table.insert(machine.custom_tooltip_fields,{
+      name = {"TFMG-thermal.output"},
+      value = {"TFMG-thermal.machine-output",tostring(base_heat_output/1000000)},
+      order = 254,
+    })
+  end
 ---go through all entities in a prototype category and run generate_thermal_interface for each of them.
   local function generate_thermal_interfaces(machines)
     if not can_generate_thermal_interfaces(machines) then return end --End if we fail sanity check
     for name, machine in pairs(machines) do -- run this script for every machine prototype
       generate_thermal_interface(machine)
+    end
+  end
+
+  local function generate_thermal_interfaces_thruster(machines)
+    if not can_generate_thermal_interfaces(machines) then return end --End if we fail sanity check
+    for name, machine in pairs(machines) do -- run this script for every machine prototype
+      generate_thermal_interface_thruster(machine)
     end
   end
 
@@ -398,3 +516,4 @@
   generate_thermal_interfaces(data.raw["lab"])
   generate_thermal_interfaces(data.raw["beacon"])
   generate_thermal_interfaces(data.raw["mining-drill"])
+  generate_thermal_interfaces_thruster(data.raw["thruster"])
