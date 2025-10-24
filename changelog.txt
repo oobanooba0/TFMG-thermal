@@ -1,6 +1,6 @@
 ---------------------------------------------------------------------------------------------------
-Version: 0.2.2
-Date: ????
+Version: 0.3.0
+Date: 2025-10-24
   Features:
     - Specific heat can now be specified
     - Small radiator for space platforms added. the prototype is setup and ready to use. so you don't have to mess with assembling the rather finnicky graphics yourself. (these will only load if space age is enabled. since their placement rules dissalow placement on normal surfaces anyway.
