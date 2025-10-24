@@ -367,7 +367,6 @@ function TFMG_thermal_core.surface_condition_compare(surface,conditions)--condit
   function TFMG_thermal_core.thermal_update(event)
     local tick = event.tick
       run_scheduled_events(tick)
-
     local registered_entities_size = table_size(storage.registered_entities)
     for type , table in pairs(storage.interfaces) do
       thermal_update_category(type,table,registered_entities_size)
