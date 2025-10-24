@@ -293,14 +293,8 @@ function TFMG_thermal_core.surface_condition_compare(surface,conditions)--condit
     table.insert(storage.tfmg_job_list[tick][type],data)
   end
 
-  function TFMG_thermal_core.thermal_update_machine(v,base_temperature_increase_per_tick,max_working_temp,max_safe_temp,delta_time)--Update an individual machine
-    if v.machine.valid == false then return end --If the machine isnt valid, don't run the script.
-    if v.interface.valid == false then return end
-		local temperature = v.interface.temperature
-		if v.machine.status == 1 then --if the machine is working, heat it up.
-			v.interface.temperature = temperature + (delta_time*base_temperature_increase_per_tick*(1 + v.machine.consumption_bonus))--This is the equation of doom. this is 90% of this mods performance cost.
-		end
-		if temperature >= max_safe_temp then--KILL KILL KILL KILL
+  local function machine_status_control(v,temperature,max_safe_temp,max_working_temp,delta_time)--handle the enable,disable and status setting of a machine.
+    if temperature >= max_safe_temp then--KILL KILL KILL KILL
 			v.machine.disabled_by_script = true
 			v.machine.custom_status = {
 				diode = defines.entity_status_diode.red,
@@ -319,25 +313,55 @@ function TFMG_thermal_core.surface_condition_compare(surface,conditions)--condit
 		end
   end
 
+  function TFMG_thermal_core.thermal_update_machine(v,base_temperature_increase_per_tick,max_working_temp,max_safe_temp,delta_time)--Update an individual machine
+    if v.machine.valid == false then return end --If the machine isnt valid, don't run the script.
+    if v.interface.valid == false then return end
+		local temperature = v.interface.temperature
+		if v.machine.status == 1 then --if the machine is working, heat it up.
+			v.interface.temperature = temperature + (delta_time*base_temperature_increase_per_tick*(1 + v.machine.consumption_bonus))--This is the equation of doom. this is 90% of this mods performance cost.
+		end
+		machine_status_control(v,temperature,max_safe_temp,max_working_temp,delta_time)
+  end
+
+  function TFMG_thermal_core.thermal_update_thruster(v,base_temperature_increase_per_tick,max_working_temp,max_safe_temp,delta_time)
+    if v.machine.valid == false then return end --If the machine isnt valid, don't run the script.
+    if v.interface.valid == false then return end
+		local temperature = v.interface.temperature
+		if v.machine.status == 1 then --if the machine is working, heat it up.
+			v.interface.temperature = temperature + (delta_time*base_temperature_increase_per_tick*(1 + v.machine.consumption_bonus))--This is the equation of doom. this is 90% of this mods performance cost.
+		end
+		machine_status_control(v,temperature,max_safe_temp,max_working_temp,delta_time)
+  end
+
   local function thermal_update_category(type,table,registered_entities_size)--Update a whole category
     local thermal_prototype = prototypes.mod_data["TFMG-thermal-"..type].data
-    local base_temperature_increase_per_tick = thermal_prototype.base_temperature_increase_per_tick --Precalculation rules.
     local max_working_temp = thermal_prototype.max_working_temperature
     local max_safe_temp = thermal_prototype.max_safe_temperature
-    local category_size = table_size(table)
+    local base_temperature_increase_per_tick = thermal_prototype.base_temperature_increase_per_tick --Precalculation rules.
+    
     --game.print(category_size)
+    local category_size = table_size(table)
     local update_budget = settings.global["update-quota"].value*(category_size/registered_entities_size)
     local delta_time = category_size/update_budget
     if delta_time < 1 then--if update budget is bigger than table size, you will get a delta time of 1, but if table size is larger than budget, then delta time increases.
       delta_time = 1
     end
     --game.print("TFMG-thermal-"..type..":"..update_budget.." "..delta_time) -- update distribution debug checker
-    storage.table_index[type] = flib_table.for_n_of(
-      table,storage.table_index[type], update_budget,
-      function(v)
-        TFMG_thermal_core.thermal_update_machine(v,base_temperature_increase_per_tick,max_working_temp,max_safe_temp,delta_time)
-      end
-    )
+    if thermal_prototype.type == "crafting_machine" then --We're gonna chose which thermal calculation function to use based on the machine type.
+      storage.table_index[type] = flib_table.for_n_of(
+        table,storage.table_index[type], update_budget,
+        function(v)
+          TFMG_thermal_core.thermal_update_machine(v,base_temperature_increase_per_tick,max_working_temp,max_safe_temp,delta_time)
+        end
+      )
+    elseif thermal_prototype.type == "thruster" then
+      storage.table_index[type] = flib_table.for_n_of(
+        table,storage.table_index[type], update_budget,
+        function(v)
+          TFMG_thermal_core.thermal_update_thruster(v,base_temperature_increase_per_tick,max_working_temp,max_safe_temp,delta_time)
+        end
+      )
+    end
   end
 
   function TFMG_thermal_core.thermal_update(event)
