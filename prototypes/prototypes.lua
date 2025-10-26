@@ -169,7 +169,16 @@ data:extend({
   },
 })
 --space age enabled prototypes
-
+ local small_radiator_connector = circuit_connector_definitions.create_vector
+    (
+      universal_connector_template,
+      {
+        { variation = 18, main_offset = util.by_pixel(5, 5), shadow_offset = util.by_pixel(35, 31), show_shadow = true },
+        { variation = 18, main_offset = util.by_pixel(-10, 5), shadow_offset = util.by_pixel(35, 31), show_shadow = true },
+        { variation = 18, main_offset = util.by_pixel(5, -10), shadow_offset = util.by_pixel(35, 31), show_shadow = true },
+        { variation = 18, main_offset = util.by_pixel(10, 5), shadow_offset = util.by_pixel(35, 31), show_shadow = true }
+      }
+    )
 if feature_flags["space_travel"] then
 --space radiator 
   --graphics helpers.
@@ -208,7 +217,7 @@ data:extend({
     minable = {mining_time = 0.2, result = "small-radiator"},
     max_health = 250,
     circuit_wire_max_distance = assembling_machine_circuit_wire_max_distance,
-    circuit_connector = circuit_connector_definitions["assembling-machine"],
+    circuit_connector = small_radiator_connector,
     collision_box = {{-0.4, -4.4}, {0.4, 0.4}},
     selection_box = {{-0.5, -4.5}, {0.5, 0.5}},
     tile_height = 1,

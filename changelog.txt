@@ -1,7 +1,12 @@
 ---------------------------------------------------------------------------------------------------
-Version: 0.4.0
+Version: 0.4.1
 Date: 2025-10-26
   Changes:
+    - Small radiator circuit connectors are placed better.
+---------------------------------------------------------------------------------------------------
+Version: 0.4.0
+Date: 2025-10-26
+  Features:
     - Space platform thrusters now support thermal system (their heat output is based on their fuel consumption rate)
     - for thrusters, instaid of heat ratio. you should use heat_per_unit_fluid
   Bugfixes:
