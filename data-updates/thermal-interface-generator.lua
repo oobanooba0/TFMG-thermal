@@ -371,7 +371,7 @@
         base_temperature_increase_per_tick = base_temperature_increase_per_tick,--this is in degrees per tick. This is actually the important value, heat ratio and heat output arent actually used when calculating the thermal scripts.
         base_heat_output = base_heat_output,--we still keep these cause theyre useful for gui, and its easy to grab them from here.
         heat_ratio = heat_ratio,
-        default_temperature = default_temperature,
+        default_temperature = machine.TFMG_thermal.default_temperature or default_temperature,
         rotation_ruleset = rotation_ruleset,
         rotation_ruleset_world = rotation_ruleset_world,
         surface_conditions = surface_conditions,
@@ -442,12 +442,10 @@
     data:extend({interface})
     
     --gather information we will put into a mod data table to recall during runtime.
-    local heat_ratio = machine.TFMG_thermal.heat_ratio or 0.5
     local max_working_temperature = machine.TFMG_thermal.max_working_temperature or 750
     local max_safe_temperature = machine.TFMG_thermal.max_safe_temperature or 850
-    local energy_usage_per_tick = util.parse_energy(machine.TFMG_thermal.heat_output or "10MW") -- in joules
-    local base_heat_output = energy_usage_per_tick*60--in W
-    local base_temperature_increase_per_tick = (energy_usage_per_tick*heat_ratio)/(specific_heat)--precalculate the per tick base heat output of the machine. That way we don't need to calculate it in runtime.
+    local heat_per_unit_fluid = util.parse_energy(machine.TFMG_thermal.heat_per_unit_fluid or "100kJ")
+    local temperature_increase_per_unit_fuel = (heat_per_unit_fluid/specific_heat)*2
     local default_temperature = 0
     if max_working_temperature >= max_safe_temperature then
       default_temperature = max_safe_temperature - 10
@@ -466,13 +464,20 @@
         type = "thruster",
         max_working_temperature = max_working_temperature,
         max_safe_temperature = max_safe_temperature,
-        base_temperature_increase_per_tick = base_temperature_increase_per_tick,--this is in degrees per tick. This is actually the important value, heat ratio and heat output arent actually used when calculating the thermal scripts.
-        base_heat_output = base_heat_output,--we still keep these cause theyre useful for gui, and its easy to grab them from here.
-        default_temperature = default_temperature,
+        temperature_increase_per_unit_fuel = temperature_increase_per_unit_fuel,
+        default_temperature = machine.TFMG_thermal.default_temperature or default_temperature,
         rotation_ruleset = "_01",
         rotation_ruleset_world = "_01",
         surface_conditions = nil, --thrusters can only built on platforms, surface conditions are never relevant.
         specific_heat = (specific_heat/1000000).."MJ",
+        min_consumption = machine.min_performance.fluid_usage,--per tick
+        max_consumption = machine.max_performance.fluid_usage,
+        fluid_1_min = machine.fuel_fluid_box.volume*machine.min_performance.fluid_volume,
+        fluid_1_max = machine.fuel_fluid_box.volume*machine.max_performance.fluid_volume,
+        fluid_2_min = machine.oxidizer_fluid_box.volume*machine.min_performance.fluid_volume,
+        fluid_2_max = machine.oxidizer_fluid_box.volume*machine.max_performance.fluid_volume,
+        fluid_1_type = machine.fuel_fluid_box.filter,
+        fluid_2_type = machine.oxidizer_fluid_box.filter,
       }
     }
     data:extend({machine_data})
@@ -491,7 +496,7 @@
     })
     table.insert(machine.custom_tooltip_fields,{
       name = {"TFMG-thermal.output"},
-      value = {"TFMG-thermal.machine-output",tostring(base_heat_output/1000000)},
+      value = {"TFMG-thermal.machine-output",tostring(heat_per_unit_fluid/1000)},
       order = 254,
     })
   end

@@ -53,9 +53,39 @@ TFMG_thermal = {
 
   --specific heat controls the specific heat of the machines thermal interface.
   --default value is the machines footprint * the specific heat pipe of a heat pipe. This means machines, by default, have the same thermal mass as their footprint in heat pipes.
-  specific_heat = "energy" --Like all other energy prototypes.
+  specific_heat = "energy-value" --Like all other energy prototypes.
 
 }
+
+--TFMG_thermal for space platform thrusters
+
+TFMG_thermal = {
+  --thrusters do not have surface conditions. They can only be placed on platforms anyway.
+
+  --if not defined, connections will default to two heat pipes on the top side. This is because heat connections on the bottom make no sense for thrusters.
+  connections = {
+    { position = {x, y}, direction = defines.direction.north }, --The order, direction and quantity is totally arbitrary, you are limited to 32 connections.
+    { position = {x, y}, direction = defines.direction.east },
+    { position = {x, y}, direction = defines.direction.south },--south connection is nonsense, but go for it i guess.
+    { position = {x, y}, direction = defines.direction.west },
+  },
+  --default is 750
+  max_working_temperature = number,
+  --default is 850
+  max_safe_temperature = number,
+  --default setting is 10 degrees less than the max working temperature of the thruster, or 740 degrees if max working temperature isn't defined.
+  default_temperature = number,
+
+  --specific heat controls the specific heat of the thrusters thermal interface.
+  --default value is the thrusters footprint * the specific heat pipe of a heat pipe
+  specific_heat = "energy-value", --Like all other energy prototypes.
+
+  --heat per unit fluid determines the amount of heat energy generated per unit of fluid the thruster burns.
+  --if a thruster uses 50 fuel and 50 oxidizer per second, and generates 100kJ per unit fluid, then it will output 10MW of heat energy.
+  --default is "100kJ"
+  heat_per_unit_fluid = "energy-value",
+}
+
 
 --additional notes:
   --Machine specific heat is calculated based on the footprint of the machine, A machine has a heat capacity equivilent to the same amount of space in heat pipes. or 1MJ per tile.

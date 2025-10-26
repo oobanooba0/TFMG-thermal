@@ -52,7 +52,7 @@ function TFMG_thermal_core.surface_condition_compare(surface,conditions)--condit
     if machine.valid == false then return game.print("tried to build invalid machine")  end
     
     local thermal_prototype = prototypes.mod_data["TFMG-thermal-"..machine.name].data
-    game.print(serpent.block(thermal_prototype))
+    --game.print(serpent.block(thermal_prototype))
     local surface = machine.surface
     local bp_proxy = surface.find_entity("TFMG-thermal-bp-proxy",machine.position)
     if bp_proxy then
@@ -115,7 +115,7 @@ function TFMG_thermal_core.surface_condition_compare(surface,conditions)--condit
 
   function TFMG_thermal_core.handle_bp_proxy_build_event(event)
     TFMG_thermal_core.schedule_event(event.tick+1,"bp_proxy",event)
-    game.print("bpproxyexistend")
+    --game.print("bpproxyexistend")
   end
 
   function TFMG_thermal_core.handle_bp_proxy(event)
@@ -323,21 +323,41 @@ function TFMG_thermal_core.surface_condition_compare(surface,conditions)--condit
 		machine_status_control(v,temperature,max_safe_temp,max_working_temp,delta_time)
   end
 
-  function TFMG_thermal_core.thermal_update_thruster(v,base_temperature_increase_per_tick,max_working_temp,max_safe_temp,delta_time)
+  function TFMG_thermal_core.thermal_update_thruster(v,temperature_increase_per_unit_fuel,max_working_temp,max_safe_temp,delta_time,fluid_1_type,fluid_2_type,fluid_1_min,fluid_2_min,fluid_1_max,fluid_2_max,min_consumption,max_consumption)
     if v.machine.valid == false then return end --If the machine isnt valid, don't run the script.
     if v.interface.valid == false then return end
+    --game.print(serpent.block(v.machine.min_performance))
 		local temperature = v.interface.temperature
 		if v.machine.status == 1 then --if the machine is working, heat it up.
-			v.interface.temperature = temperature + (delta_time*base_temperature_increase_per_tick*(1 + v.machine.consumption_bonus))--This is the equation of doom. this is 90% of this mods performance cost.
+      --game.print(serpent.block(v.machine.quality.default_multiplier))
+      local quality_multiplier = v.machine.quality.default_multiplier
+      local consumption = max_consumption
+      do
+        local fluid1 = v.machine.get_fluid_count(fluid_1_type)
+        local fluid2 = v.machine.get_fluid_count(fluid_2_type)
+        if fluid1 >= fluid_1_max and fluid2 >= fluid_2_max then goto heat end--if both are at max, then we just spit out max consumption. between these two pre checks we should ideally, get reasonably performant code
+        if fluid1 <= fluid_1_min then consumption = min_consumption goto heat end --if either fluid is below its minimum then consumption is gonna be its lowest possible value
+        if fluid2 <= fluid_2_min then consumption = min_consumption goto heat end
+        local fluid1_scale = (fluid1 - fluid_1_min)/(fluid_1_max - fluid_1_min)
+        local fluid2_scale = (fluid2 - fluid_2_min)/(fluid_2_max - fluid_2_min)
+        local scale = math.min(fluid1_scale,fluid2_scale)
+        consumption = scale*(max_consumption-min_consumption) + min_consumption
+      end
+      ::heat::
+      --game.print(consumption*quality_multiplier,{skip = defines.print_skip.never})
+			v.interface.temperature = temperature + (delta_time*consumption*temperature_increase_per_unit_fuel*quality_multiplier)--This is the equation of doom. this is 90% of this mods performance cost.
 		end
 		machine_status_control(v,temperature,max_safe_temp,max_working_temp,delta_time)
   end
 
   local function thermal_update_category(type,table,registered_entities_size)--Update a whole category
+    if not prototypes.mod_data["TFMG-thermal-"..type] then
+      game.print("previously-existing-thermal-entity"..type.." no longer exists. Deleting related storage tables.") 
+      storage.interfaces[type] = nil
+      return end
     local thermal_prototype = prototypes.mod_data["TFMG-thermal-"..type].data
     local max_working_temp = thermal_prototype.max_working_temperature
     local max_safe_temp = thermal_prototype.max_safe_temperature
-    local base_temperature_increase_per_tick = thermal_prototype.base_temperature_increase_per_tick --Precalculation rules.
     
     --game.print(category_size)
     local category_size = table_size(table)
@@ -347,10 +367,11 @@ function TFMG_thermal_core.surface_condition_compare(surface,conditions)--condit
       delta_time = 1
     end
     --game.print("TFMG-thermal-"..type..":"..update_budget.." "..delta_time) -- update distribution debug checker
-    if thermal_prototype.type == "crafting_machine" then --We're gonna chose which thermal calculation function to use based on the machine type.
+    if thermal_prototype.type == "crafting-machine" then --We're gonna chose which thermal calculation function to use based on the machine type.
       storage.table_index[type] = flib_table.for_n_of(
         table,storage.table_index[type], update_budget,
         function(v)
+          local base_temperature_increase_per_tick = thermal_prototype.base_temperature_increase_per_tick --Precalculation rules.
           TFMG_thermal_core.thermal_update_machine(v,base_temperature_increase_per_tick,max_working_temp,max_safe_temp,delta_time)
         end
       )
@@ -358,7 +379,16 @@ function TFMG_thermal_core.surface_condition_compare(surface,conditions)--condit
       storage.table_index[type] = flib_table.for_n_of(
         table,storage.table_index[type], update_budget,
         function(v)
-          TFMG_thermal_core.thermal_update_thruster(v,base_temperature_increase_per_tick,max_working_temp,max_safe_temp,delta_time)
+          local temperature_increase_per_unit_fuel = thermal_prototype.temperature_increase_per_unit_fuel
+          local fluid_1_type = thermal_prototype.fluid_1_type
+          local fluid_2_type = thermal_prototype.fluid_2_type
+          local fluid_1_min = thermal_prototype.fluid_1_min
+          local fluid_2_min = thermal_prototype.fluid_2_min
+          local fluid_1_max = thermal_prototype.fluid_1_max
+          local fluid_2_max = thermal_prototype.fluid_2_max
+          local min_consumption = thermal_prototype.min_consumption
+          local max_consumption = thermal_prototype.max_consumption
+          TFMG_thermal_core.thermal_update_thruster(v,temperature_increase_per_unit_fuel,max_working_temp,max_safe_temp,delta_time,fluid_1_type,fluid_2_type,fluid_1_min,fluid_2_min,fluid_1_max,fluid_2_max,min_consumption,max_consumption)
         end
       )
     end

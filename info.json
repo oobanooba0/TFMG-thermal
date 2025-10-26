@@ -5,7 +5,7 @@
   "author": "oobanooba",
   "factorio_version": "2.0",
   "dependencies": [
-    "base >= 2.0.69",
+    "base >= 2.0.72",
     "flib >= 0.16.3",
     "bplib >= 1.1.4"
   ],

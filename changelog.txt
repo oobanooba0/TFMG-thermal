@@ -1,7 +1,11 @@
 ---------------------------------------------------------------------------------------------------
 Version: 0.4.0
-Date: ???
+Date: 2025-10-26
   Changes:
+    - Space platform thrusters now support thermal system (their heat output is based on their fuel consumption rate)
+    - for thrusters, instaid of heat ratio. you should use heat_per_unit_fluid
+  Bugfixes:
+    - Specified default temperature is actually respected.
 ---------------------------------------------------------------------------------------------------
 Version: 0.3.2
 Date: 2025-10-24
