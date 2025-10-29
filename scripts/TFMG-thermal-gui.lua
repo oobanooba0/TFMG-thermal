@@ -20,7 +20,7 @@ local function collect_interface_entry(machine,player_storage)--will gather the 
   player_storage.gui = {}
   local gui_storage = player_storage.gui
 
-  if storage.interfaces[machine.name] == nil then
+  if not storage.interfaces[machine.name] or not storage.interfaces[machine.name][machine.unit_number] then
     gui_storage = nil
   else
     local thermal_prototype = prototypes.mod_data["TFMG-thermal-"..machine.name].data
