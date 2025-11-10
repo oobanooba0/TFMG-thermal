@@ -317,7 +317,17 @@ function TFMG_thermal_core.surface_condition_compare(surface,conditions)--condit
     if v.machine.valid == false then return end --If the machine isnt valid, don't run the script.
     if v.interface.valid == false then return end
 		local temperature = v.interface.temperature
-		if v.machine.status == 1 then --if the machine is working, heat it up.
+		if v.machine.status == 1 or v.machine.status == 14 then --if the machine is working, heat it up.
+			v.interface.temperature = temperature + (delta_time*base_temperature_increase_per_tick*(1 + v.machine.consumption_bonus))--This is the equation of doom. this is 90% of this mods performance cost.
+		end
+		machine_status_control(v,temperature,max_safe_temp,max_working_temp,delta_time)
+  end
+
+  function TFMG_thermal_core.thermal_update_machine_passive(v,base_temperature_increase_per_tick,max_working_temp,max_safe_temp,delta_time)--This script is for machines that produce heat from passive draw.
+    if v.machine.valid == false then return end --If the machine isnt valid, don't run the script.
+    if v.interface.valid == false then return end
+		local temperature = v.interface.temperature
+		if v.machine.status == 1 or v.machine.status == 14 then --if the machine is working (or low power), heat it up.
 			v.interface.temperature = temperature + (delta_time*base_temperature_increase_per_tick*(1 + v.machine.consumption_bonus))--This is the equation of doom. this is 90% of this mods performance cost.
 		end
 		machine_status_control(v,temperature,max_safe_temp,max_working_temp,delta_time)
@@ -328,7 +338,7 @@ function TFMG_thermal_core.surface_condition_compare(surface,conditions)--condit
     if v.interface.valid == false then return end
     --game.print(serpent.block(v.machine.min_performance))
 		local temperature = v.interface.temperature
-		if v.machine.status == 1 then --if the machine is working, heat it up.
+		if v.machine.status == 1 or v.machine.status == 14 then --if the machine is working, heat it up.
       --game.print(serpent.block(v.machine.quality.default_multiplier))
       local quality_multiplier = v.machine.quality.default_multiplier
       local consumption = max_consumption
@@ -373,6 +383,14 @@ function TFMG_thermal_core.surface_condition_compare(surface,conditions)--condit
         function(v)
           local base_temperature_increase_per_tick = thermal_prototype.base_temperature_increase_per_tick --Precalculation rules.
           TFMG_thermal_core.thermal_update_machine(v,base_temperature_increase_per_tick,max_working_temp,max_safe_temp,delta_time)
+        end
+      )
+    elseif thermal_prototype.type == "crafting-machine-passive" then
+      storage.table_index[type] = flib_table.for_n_of(
+        table,storage.table_index[type], update_budget,
+        function(v)
+          local base_temperature_increase_per_tick = thermal_prototype.base_temperature_increase_per_tick --Precalculation rules.
+          TFMG_thermal_core.thermal_update_machine_passive(v,base_temperature_increase_per_tick,max_working_temp,max_safe_temp,delta_time)
         end
       )
     elseif thermal_prototype.type == "thruster" then
