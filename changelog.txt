@@ -1,8 +1,10 @@
 ---------------------------------------------------------------------------------------------------
 Version: 0.4.3
-Date: ????
+Date: 2025-11-10
+  Features:
+    - heat_when_disabled_by_script added, which allows for machines to still produce heat even when disabled by script. This *might* be useful for certain compound entities.
   Bugfixes:
-    - machines now produce heat when low power mode, its full heat output so not ideal.
+    - machines now produce heat while in low power, heat production is correct for power consumption
 ---------------------------------------------------------------------------------------------------
 Version: 0.4.2
 Date: 2025-10-29

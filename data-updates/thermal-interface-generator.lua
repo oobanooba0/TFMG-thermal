@@ -358,6 +358,9 @@
     end
 
     local rotation_ruleset, rotation_ruleset_world = set_rotation_rules(machine)
+    local script_type = "crafting-machine"
+    local heat_when_disabled = false
+    if machine.TFMG_thermal.heat_when_disabled_by_script then heat_when_disabled = true end
 
     local machine_data = {--this information we take into runtime, since we need it for scripts or for gui.
       type = "mod-data",
@@ -365,7 +368,8 @@
       name = "TFMG-thermal-"..machine.name,
       data = {
         name = machine.name,
-        type = "crafting-machine",
+        type = script_type,
+        heat_when_disabled_by_script = heat_when_disabled,
         max_working_temperature = max_working_temperature,
         max_safe_temperature = max_safe_temperature,
         base_temperature_increase_per_tick = base_temperature_increase_per_tick,--this is in degrees per tick. This is actually the important value, heat ratio and heat output arent actually used when calculating the thermal scripts.

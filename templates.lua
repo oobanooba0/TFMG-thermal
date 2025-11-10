@@ -53,7 +53,12 @@ TFMG_thermal = {
 
   --specific heat controls the specific heat of the machines thermal interface.
   --default value is the machines footprint * the specific heat pipe of a heat pipe. This means machines, by default, have the same thermal mass as their footprint in heat pipes.
-  specific_heat = "energy-value" --Like all other energy prototypes.
+  specific_heat = "energy-value", --Like all other energy prototypes.
+
+  --heat when disabled by script determines weather the machine should still produce heat when disabled by script, this may be useful for compound entities like TFMGs supercomputer.
+  --Note that this script still will automatically set machine status to enabled after a thermal tick. This is mostly a because I needed it more than anything.
+  --default is false
+  heat_when_disabled_by_script = boolean, --true or false.
 
 }
 

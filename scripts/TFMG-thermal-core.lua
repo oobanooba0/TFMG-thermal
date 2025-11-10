@@ -313,33 +313,41 @@ function TFMG_thermal_core.surface_condition_compare(surface,conditions)--condit
 		end
   end
 
-  function TFMG_thermal_core.thermal_update_machine(v,base_temperature_increase_per_tick,max_working_temp,max_safe_temp,delta_time)--Update an individual machine
+  function TFMG_thermal_core.thermal_update_machine(v,base_temperature_increase_per_tick,max_working_temp,max_safe_temp,delta_time,base_buffer_size)--Update an individual machine
     if v.machine.valid == false then return end --If the machine isnt valid, don't run the script.
     if v.interface.valid == false then return end
 		local temperature = v.interface.temperature
-		if v.machine.status == 1 or v.machine.status == 14 then --if the machine is working, heat it up.
+		if v.machine.status == 1 then --if the machine is working, heat it up.
 			v.interface.temperature = temperature + (delta_time*base_temperature_increase_per_tick*(1 + v.machine.consumption_bonus))--This is the equation of doom. this is 90% of this mods performance cost.
-		end
+    elseif v.machine.status == 14 then --when on low power, we need to know at what fraction of optimal we're running, this is more complex, so we only do this if our machine is in low power status.
+      local energy_multiplier = (1 + v.machine.consumption_bonus)
+      local power_level = v.machine.energy/(base_buffer_size*energy_multiplier)
+      v.interface.temperature = temperature + (delta_time*base_temperature_increase_per_tick*energy_multiplier*power_level)
+    end
 		machine_status_control(v,temperature,max_safe_temp,max_working_temp,delta_time)
   end
 
-  function TFMG_thermal_core.thermal_update_machine_passive(v,base_temperature_increase_per_tick,max_working_temp,max_safe_temp,delta_time)--This script is for machines that produce heat from passive draw.
+  function TFMG_thermal_core.thermal_update_machine_disabled_heat(v,base_temperature_increase_per_tick,max_working_temp,max_safe_temp,delta_time,base_buffer_size)--This version of the script should still produce heat when machines are disabled by script.
     if v.machine.valid == false then return end --If the machine isnt valid, don't run the script.
     if v.interface.valid == false then return end
+    v.machine.disabled_by_script = false --We're gonna enable this machine here, so we can get the true status of the machine.
+    --game.print(v.machine.status)
 		local temperature = v.interface.temperature
-		if v.machine.status == 1 or v.machine.status == 14 then --if the machine is working (or low power), heat it up.
+		if v.machine.status == 1 then --if the machine is working, heat it up.
 			v.interface.temperature = temperature + (delta_time*base_temperature_increase_per_tick*(1 + v.machine.consumption_bonus))--This is the equation of doom. this is 90% of this mods performance cost.
-		end
+    elseif v.machine.status == 14 then --when on low power, we need to know at what fraction of optimal we're running, this is more complex, so we only do this if our machine is in low power status.
+      local energy_multiplier = (1 + v.machine.consumption_bonus)
+      local power_level = v.machine.energy/(base_buffer_size*energy_multiplier)
+      v.interface.temperature = temperature + (delta_time*base_temperature_increase_per_tick*energy_multiplier*power_level)
+    end
 		machine_status_control(v,temperature,max_safe_temp,max_working_temp,delta_time)
   end
 
   function TFMG_thermal_core.thermal_update_thruster(v,temperature_increase_per_unit_fuel,max_working_temp,max_safe_temp,delta_time,fluid_1_type,fluid_2_type,fluid_1_min,fluid_2_min,fluid_1_max,fluid_2_max,min_consumption,max_consumption)
     if v.machine.valid == false then return end --If the machine isnt valid, don't run the script.
     if v.interface.valid == false then return end
-    --game.print(serpent.block(v.machine.min_performance))
 		local temperature = v.interface.temperature
-		if v.machine.status == 1 or v.machine.status == 14 then --if the machine is working, heat it up.
-      --game.print(serpent.block(v.machine.quality.default_multiplier))
+		if v.machine.status == 1 then --if the machine is working, heat it up.
       local quality_multiplier = v.machine.quality.default_multiplier
       local consumption = max_consumption
       do
@@ -377,35 +385,40 @@ function TFMG_thermal_core.surface_condition_compare(surface,conditions)--condit
       delta_time = 1
     end
     --game.print("TFMG-thermal-"..type..":"..update_budget.." "..delta_time) -- update distribution debug checker
+
     if thermal_prototype.type == "crafting-machine" then --We're gonna chose which thermal calculation function to use based on the machine type.
-      storage.table_index[type] = flib_table.for_n_of(
+      --get these values only once, since they should remain the same across all instances of the machine.
+      local base_temperature_increase_per_tick = thermal_prototype.base_temperature_increase_per_tick --Precalculation rules.
+      local base_buffer_size = (prototypes.entity[thermal_prototype.name].get_max_energy_usage())*(64/60)
+      if thermal_prototype.heat_when_disabled_by_script then --we run the same damn script but like, a tiny bit different
+        storage.table_index[type] = flib_table.for_n_of(
         table,storage.table_index[type], update_budget,
         function(v)
-          local base_temperature_increase_per_tick = thermal_prototype.base_temperature_increase_per_tick --Precalculation rules.
-          TFMG_thermal_core.thermal_update_machine(v,base_temperature_increase_per_tick,max_working_temp,max_safe_temp,delta_time)
+          TFMG_thermal_core.thermal_update_machine_disabled_heat(v,base_temperature_increase_per_tick,max_working_temp,max_safe_temp,delta_time,base_buffer_size)
         end
       )
-    elseif thermal_prototype.type == "crafting-machine-passive" then
+      else
+        storage.table_index[type] = flib_table.for_n_of(
+          table,storage.table_index[type], update_budget,
+          function(v)
+            TFMG_thermal_core.thermal_update_machine(v,base_temperature_increase_per_tick,max_working_temp,max_safe_temp,delta_time,base_buffer_size)
+          end
+        )
+      end
+    elseif thermal_prototype.type == "thruster" then -- for thrusters, which need a wholly different thermal script.
+      --get these values only once, since theyre reused for each instance of the thruster.
+      local temperature_increase_per_unit_fuel = thermal_prototype.temperature_increase_per_unit_fuel
+      local fluid_1_type = thermal_prototype.fluid_1_type
+      local fluid_2_type = thermal_prototype.fluid_2_type
+      local fluid_1_min = thermal_prototype.fluid_1_min
+      local fluid_2_min = thermal_prototype.fluid_2_min
+      local fluid_1_max = thermal_prototype.fluid_1_max
+      local fluid_2_max = thermal_prototype.fluid_2_max
+      local min_consumption = thermal_prototype.min_consumption
+      local max_consumption = thermal_prototype.max_consumption
       storage.table_index[type] = flib_table.for_n_of(
         table,storage.table_index[type], update_budget,
         function(v)
-          local base_temperature_increase_per_tick = thermal_prototype.base_temperature_increase_per_tick --Precalculation rules.
-          TFMG_thermal_core.thermal_update_machine_passive(v,base_temperature_increase_per_tick,max_working_temp,max_safe_temp,delta_time)
-        end
-      )
-    elseif thermal_prototype.type == "thruster" then
-      storage.table_index[type] = flib_table.for_n_of(
-        table,storage.table_index[type], update_budget,
-        function(v)
-          local temperature_increase_per_unit_fuel = thermal_prototype.temperature_increase_per_unit_fuel
-          local fluid_1_type = thermal_prototype.fluid_1_type
-          local fluid_2_type = thermal_prototype.fluid_2_type
-          local fluid_1_min = thermal_prototype.fluid_1_min
-          local fluid_2_min = thermal_prototype.fluid_2_min
-          local fluid_1_max = thermal_prototype.fluid_1_max
-          local fluid_2_max = thermal_prototype.fluid_2_max
-          local min_consumption = thermal_prototype.min_consumption
-          local max_consumption = thermal_prototype.max_consumption
           TFMG_thermal_core.thermal_update_thruster(v,temperature_increase_per_unit_fuel,max_working_temp,max_safe_temp,delta_time,fluid_1_type,fluid_2_type,fluid_1_min,fluid_2_min,fluid_1_max,fluid_2_max,min_consumption,max_consumption)
         end
       )
