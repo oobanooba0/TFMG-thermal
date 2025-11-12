@@ -138,14 +138,14 @@ function TFMG_thermal_core.surface_condition_compare(surface,conditions)--condit
     local interface_table = storage.interfaces[event.selected_prototype.name]
     local machine_prototype = event.selected_prototype
     local player = game.players[event.player_index]
-    local surface = player.character and player.character.surface or player.surface
+    local surface = player.surface
     local machine = surface.find_entity(machine_prototype.name,event.cursor_position)
     if machine == nil then return end
     local v = interface_table[machine.unit_number]
-  return v,machine end
+  return v end
 
   function TFMG_thermal_core.handle_transform(event,transform) --Deals with getting a new direction based on the machines rotation rules and such.
-    local v,machine = get_entry_from_input_event(event)
+    local v = get_entry_from_input_event(event)
     if v == nil then return end
     local rotation_ruleset = prototypes.mod_data["TFMG-thermal-"..event.selected_prototype.name].data.rotation_ruleset_world
     if rotation_ruleset == "_01" then return end --dont rotate if not rotatable.
@@ -333,12 +333,14 @@ function TFMG_thermal_core.surface_condition_compare(surface,conditions)--condit
     v.machine.disabled_by_script = false --We're gonna enable this machine here, so we can get the true status of the machine.
     --game.print(v.machine.status)
 		local temperature = v.interface.temperature
-		if v.machine.status == 1 then --if the machine is working, heat it up.
-			v.interface.temperature = temperature + (delta_time*base_temperature_increase_per_tick*(1 + v.machine.consumption_bonus))--This is the equation of doom. this is 90% of this mods performance cost.
-    elseif v.machine.status == 14 then --when on low power, we need to know at what fraction of optimal we're running, this is more complex, so we only do this if our machine is in low power status.
-      local energy_multiplier = (1 + v.machine.consumption_bonus)
-      local power_level = v.machine.energy/(base_buffer_size*energy_multiplier)
-      v.interface.temperature = temperature + (delta_time*base_temperature_increase_per_tick*energy_multiplier*power_level)
+    if max_working_temp >= temperature then -- we need to check if this machine isnt overheated, since the no heat if its not working assumption no longer applies here.
+		  if v.machine.status == 1 then --if the machine is working, heat it up.
+		  	v.interface.temperature = temperature + (delta_time*base_temperature_increase_per_tick*(1 + v.machine.consumption_bonus))--This is the equation of doom. this is 90% of this mods performance cost.
+      elseif v.machine.status == 14 then --when on low power, we need to know at what fraction of optimal we're running, this is more complex, so we only do this if our machine is in low power status.
+        local energy_multiplier = (1 + v.machine.consumption_bonus)
+        local power_level = v.machine.energy/(base_buffer_size*energy_multiplier)
+        v.interface.temperature = temperature + (delta_time*base_temperature_increase_per_tick*energy_multiplier*power_level)
+      end
     end
 		machine_status_control(v,temperature,max_safe_temp,max_working_temp,delta_time)
   end
