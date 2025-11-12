@@ -3,6 +3,7 @@ Version: 0.4.4
 Date: 2025-11-12
   Bugfixes:
     - Fixed rotating entities on other surfaces through map view
+    - Fixed disabled by script entities from producing heat when they are overheating.
 ---------------------------------------------------------------------------------------------------
 Version: 0.4.3
 Date: 2025-11-10
