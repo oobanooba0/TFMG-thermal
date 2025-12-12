@@ -91,7 +91,7 @@ function TFMG_thermal_core.surface_condition_compare(surface,conditions)--condit
     if not storage.registered_entities then return end
     local unit_number = event.useful_id
     local machine = storage.registered_entities[unit_number]--recall what kind of machine we destroyed
-    if not machine then return game.print("machine was nil"..unit_number) end
+    if not machine then return end
   	if storage.interfaces[machine] and storage.interfaces[machine][unit_number] then
   		local v = storage.interfaces[machine][unit_number]
   		if v.interface.destroy() == true then
