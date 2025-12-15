@@ -135,9 +135,19 @@ function TFMG_thermal_core.surface_condition_compare(surface,conditions)--condit
 
   local function get_entry_from_input_event(event)
     if not event.selected_prototype or storage.interfaces[event.selected_prototype.name] == nil then return end
+    local player = game.players[event.player_index]
+    if not player.is_cursor_empty() then
+      local cursor_stack
+      if player.cursor_stack and player.cursor_stack.valid_for_read then
+        cursor_stack = player.cursor_stack.prototype
+      elseif player.cursor_ghost then
+        cursor_stack = player.cursor_ghost.name
+      end
+      if not cursor_stack then return end
+      if cursor_stack.place_result then return end
+    end
     local interface_table = storage.interfaces[event.selected_prototype.name]
     local machine_prototype = event.selected_prototype
-    local player = game.players[event.player_index]
     local surface = player.surface
     local machine = surface.find_entity(machine_prototype.name,event.cursor_position)
     if machine == nil then return end

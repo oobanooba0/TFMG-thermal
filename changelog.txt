@@ -5,6 +5,7 @@ Date: 2025-12-15
     - Machines by default place at 15 degrees.
   Bugfixes:
     - fixed crash on load when mods add surfaces without any surface conditons.
+    - Fixed thermal interfaces being rotated when holding a machine or blueprint and hovering over them. So no more rotation discrepancies (hopefully)
 ---------------------------------------------------------------------------------------------------
 Version: 0.4.5
 Date: 2025-12-12
