@@ -81,7 +81,7 @@ function TFMG_thermal_core.surface_condition_compare(surface,conditions)--condit
   	interface.disabled_by_script = true
     local temperature = temperature or thermal_prototype.default_temperature
   	interface.temperature = temperature
-  	interface.destructible = false
+  	--interface.destructible = false
     --Store the entity in its table.
   	storage.interfaces[machine.name][unit_number] = { machine = machine, interface = interface, direction = direction}
     storage.registered_entities[unit_number] = machine.name--we need this to be able to recall information about the machine when destorying it
@@ -325,7 +325,7 @@ function TFMG_thermal_core.surface_condition_compare(surface,conditions)--condit
 
   function TFMG_thermal_core.thermal_update_machine(v,base_temperature_increase_per_tick,max_working_temp,max_safe_temp,delta_time,base_buffer_size)--Update an individual machine
     if v.machine.valid == false then return end --If the machine isnt valid, don't run the script.
-    if v.interface.valid == false then return end
+    if v.interface.valid == false then return end --we'll probably need something to handle this.
 		local temperature = v.interface.temperature
 		if v.machine.status == 1 then --if the machine is working, heat it up.
 			v.interface.temperature = temperature + (delta_time*base_temperature_increase_per_tick*(1 + v.machine.consumption_bonus))--This is the equation of doom. this is 90% of this mods performance cost.

@@ -12,6 +12,20 @@
     return end
   return true end
 
+--resistances set generations
+local resistances = {}
+
+for name,damage_type in pairs(data.raw["damage-type"]) do --generate our set of resistances.
+  if name ~= "impact" then
+    table.insert(resistances,
+    {
+      type = name,
+      decrease = 1000000000000,
+      percent = 100,
+    })
+  end
+end
+
 --Heat interface connection graphic definitions
   local heat_pipe_connected = {--connected
     {size = 64, filename = "__base__/graphics/entity/heat-pipe/heat-pipe-straight-vertical-1.png", scale = 0.5},
@@ -320,6 +334,7 @@
         collision_mask = {layers ={}}, --the interface does not concern itself with the plight of lesser entities.
         collision_box = collision_set[direction], --ensures correct placement
         selection_box = collision_set[direction],
+        resistances  = resistances,
         selection_priority = 40,
         selectable_in_game = true,
         allow_copy_paste = false,
@@ -426,6 +441,7 @@
       flags = {"placeable-neutral", "player-creation","not-on-map","not-blueprintable","not-deconstructable","no-automated-item-insertion","no-automated-item-removal"},
       collision_mask = {layers ={}}, --the interface does not concern itself with the plight of lesser entities.
       collision_box = collision_box,
+      resistances  = resistances,
       selection_box = {{-1,-1},{1,1}},
       selection_priority = 250,
       selectable_in_game = false,

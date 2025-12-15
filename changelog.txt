@@ -1,4 +1,9 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.4.7
+Date: ????
+  Changes:
+    - Thermal interfaces are no longer indestructable, but have complete damage resistances (except impact, such that they dont make space platform tiles theyre on near invincible)
+---------------------------------------------------------------------------------------------------
 Version: 0.4.6
 Date: 2025-12-15
   Changes:
