@@ -6,6 +6,7 @@ Date: 2025-12-15
   Bugfixes:
     - fixed crash on load when mods add surfaces without any surface conditons.
     - Fixed thermal interfaces being rotated when holding a machine or blueprint and hovering over them. So no more rotation discrepancies (hopefully)
+    - Fixed some rotation issues.
 ---------------------------------------------------------------------------------------------------
 Version: 0.4.5
 Date: 2025-12-12
