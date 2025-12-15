@@ -227,7 +227,8 @@
   return interface end
 
   local function surface_condition_compare(surface,conditions)--this function fucks.
-  if conditions == nil then return true end -- if we dont have any surface conditions, we already know it will pass
+  if not conditions then return true end -- if we dont have any surface conditions, we already know it will pass
+  if not surface.surface_properties then return true end
     for _ , condition in pairs(conditions) do --checking each surface condition requirement, if any fail, we return false.
       local surface_condition_value = surface.surface_properties[condition.property] or data.raw["surface-property"][condition.property].default_value
       if condition.min > surface_condition_value or surface_condition_value > condition.max then return false end
@@ -350,12 +351,12 @@
     local energy_usage_per_tick = util.parse_energy(machine.energy_usage) -- in joules
     local base_heat_output = energy_usage_per_tick*heat_ratio*60--in W
     local base_temperature_increase_per_tick = (energy_usage_per_tick*heat_ratio)/(specific_heat)--precalculate the per tick base heat output of the machine. That way we don't need to calculate it in runtime.
-    local default_temperature = 0
-    if max_working_temperature >= max_safe_temperature then
-      default_temperature = max_safe_temperature - 10
-    else
-      default_temperature = max_working_temperature - 10
-    end
+    local default_temperature = 15
+    --if max_working_temperature >= max_safe_temperature then
+    --  default_temperature = max_safe_temperature - 10
+    --else
+    --  default_temperature = max_working_temperature - 10
+    --end
 
     local rotation_ruleset, rotation_ruleset_world = set_rotation_rules(machine)
     local script_type = "crafting-machine"
@@ -427,7 +428,7 @@
       collision_box = collision_box,
       selection_box = {{-1,-1},{1,1}},
       selection_priority = 250,
-      selectable_in_game = true,
+      selectable_in_game = false,
       allow_copy_paste = false,
       hidden = true,
       consumption = "1W", -- this is actually irrelevant, but its required by the reactor prototype.
@@ -450,12 +451,12 @@
     local max_safe_temperature = machine.TFMG_thermal.max_safe_temperature or 850
     local heat_per_unit_fluid = util.parse_energy(machine.TFMG_thermal.heat_per_unit_fluid or "100kJ")
     local temperature_increase_per_unit_fuel = (heat_per_unit_fluid/specific_heat)*2
-    local default_temperature = 0
-    if max_working_temperature >= max_safe_temperature then
-      default_temperature = max_safe_temperature - 10
-    else
-      default_temperature = max_working_temperature - 10
-    end
+    local default_temperature = 15
+    --if max_working_temperature >= max_safe_temperature then
+    --  default_temperature = max_safe_temperature - 10
+    --else
+    --  default_temperature = max_working_temperature - 10
+    --end
 
     local rotation_ruleset, rotation_ruleset_world = set_rotation_rules(machine)
 

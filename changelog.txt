@@ -1,4 +1,11 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.4.6
+Date: 2025-12-15
+  Changes:
+    - Machines by default place at 15 degrees.
+  Bugfixes:
+    - fixed crash on load when mods add surfaces without any surface conditons.
+---------------------------------------------------------------------------------------------------
 Version: 0.4.5
 Date: 2025-12-12
   Bugfixes:

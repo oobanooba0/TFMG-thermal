@@ -48,7 +48,7 @@ TFMG_thermal = {
   max_safe_temperature = number,
 
   --default temperature determines what temperature a machine is placed at
-  --default setting is 10 degrees less than the max working temperature of the machine, or 240 degrees if max working temperature isn't defined.
+  --default setting is 15 degrees 
   default_temperature = number,
 
   --specific heat controls the specific heat of the machines thermal interface.
@@ -78,7 +78,7 @@ TFMG_thermal = {
   max_working_temperature = number,
   --default is 850
   max_safe_temperature = number,
-  --default setting is 10 degrees less than the max working temperature of the thruster, or 740 degrees if max working temperature isn't defined.
+  --default setting is 15 degrees
   default_temperature = number,
 
   --specific heat controls the specific heat of the thrusters thermal interface.
