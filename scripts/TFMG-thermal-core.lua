@@ -68,9 +68,11 @@ function TFMG_thermal_core.surface_condition_compare(surface,conditions)--condit
         if machine.mirroring == true then direction = direction + 4 end
       end
     end
+    if direction == 0 then direction = 1 end --fucking whatever this should probably prevent some issue somewhere.
     --if event.tags and event.tags.thermal_direction then game.print(event.tags.thermal_direction) else game.print("no tags on this entity") end --check if tags are coming though
     --Deal with surface conditions
     local interface_prototype = prototypes.entity[machine.name .. "-thermal-interface"..direction]
+    --game.print(serpent.block(machine.name .. "-thermal-interface"..direction))
     local conditions = interface_prototype.surface_conditions
     if TFMG_thermal_core.surface_condition_compare(surface,conditions) == false then return end --You shall not pass
    
@@ -184,13 +186,19 @@ function TFMG_thermal_core.surface_condition_compare(surface,conditions)--condit
 
   	-- Check for any entities matching your custom entity
   	for bp_index, machine in pairs(map) do
-      local interface_prototype = prototypes.mod_data["TFMG-thermal-"..machine.name] --for every entity in the blueprint,   we'll check if we have a thermal prototype associated with it
-      if interface_prototype and storage.interfaces[machine.name] then
-  			-- Calculate your custom tags here based on information about your
-  			-- entity.
-        local v = storage.interfaces[machine.name][machine.unit_number]
-        if v then
-  			  bp_setup:apply_tags(bp_index, { thermal_direction = v.direction })
+      local interface_prototype = prototypes.mod_data["TFMG-thermal-"..machine.name] or prototypes.mod_data["TFMG-thermal-"..machine.ghost_name]--for every entity in the blueprint,   we'll check if we have a thermal prototype associated with its
+      if interface_prototype then
+       if storage.interfaces[machine.name] then
+  			  -- Calculate your custom tags here based on information about your
+  			  -- entity.
+          local v = storage.interfaces[machine.name][machine.unit_number]
+          --game.print(serpent.block(v)) --yet another debug
+          if v then
+  			    bp_setup:apply_tags(bp_index, { thermal_direction = v.direction })
+          end
+        end
+        if machine.direction then
+          bp_setup:apply_tags(bp_index, { thermal_direction = machine.direction/4+1 }) --this is sketchy but basically if no infromation IE entity is ghost and has no interface, we must get our information from the machine direction if it exists.
         end
   		end
   	end
