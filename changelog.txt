@@ -2,7 +2,7 @@
 Version: 0.4.9
 Date: 2025-12-21
   Bugfixes:
-    - probably, fixed the crash i created when i fixed the crash, I couldn't recreate the issue. Lemme know if it comes up again.
+    - probably, fixed the crash i created when i fixed the crash, I couldn't recreate the issue, but i think i know where it was. Lemme know if it comes up again.
 ---------------------------------------------------------------------------------------------------
 Version: 0.4.8
 Date: 2025-12-20
