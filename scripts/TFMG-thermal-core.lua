@@ -186,7 +186,12 @@ function TFMG_thermal_core.surface_condition_compare(surface,conditions)--condit
 
   	-- Check for any entities matching your custom entity
   	for bp_index, machine in pairs(map) do
-      local interface_prototype = prototypes.mod_data["TFMG-thermal-"..machine.name] or prototypes.mod_data["TFMG-thermal-"..machine.ghost_name]--for every entity in the blueprint,   we'll check if we have a thermal prototype associated with its
+      local interface_prototype --for every entity in the blueprint, we'll check if we have a thermal prototype associated with its
+      if machine.name == "entity-ghost" then 
+        interface_prototype = prototypes.mod_data["TFMG-thermal-"..machine.ghost_name]
+      else
+        interface_prototype = prototypes.mod_data["TFMG-thermal-"..machine.name]
+      end
       if interface_prototype then
        if storage.interfaces[machine.name] then
   			  -- Calculate your custom tags here based on information about your
