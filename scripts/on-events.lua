@@ -156,6 +156,16 @@ function(event)
 	TFMG_thermal_gui.on_player_join(event)
 end)
 
+--make sure player storage exist when adding mod to existing game
+script.on_event(defines.events.on_singleplayer_init, 
+function()
+	TFMG_thermal_gui.reload()
+end)
+script.on_event(defines.events.on_multiplayer_init, 
+function()
+	TFMG_thermal_gui.reload()
+end)
+
 script.on_event(defines.events.on_gui_opened,
   function(event)
     if event.gui_type == defines.gui_type.entity then

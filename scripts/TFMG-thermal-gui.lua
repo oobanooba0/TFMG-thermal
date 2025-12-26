@@ -34,7 +34,15 @@ return gui_storage end
 
 function TFMG_thermal_gui.on_player_join(event)
   local player = game.players[event.player_index]
-	storage.players[player.index] = {}--initialise player storage
+	storage.players[player.index] = {} --initialise player storage
+end
+
+function TFMG_thermal_gui.reload()
+  for _, player in pairs(game.players) do
+    if storage.players[player.index] == nil then --check if player storage is initialised
+      storage.players[player.index] = {} --initialise player storage
+    end
+  end
 end
 
 function TFMG_thermal_gui.gui_open(event)
