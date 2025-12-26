@@ -59,3 +59,11 @@ surface_conditions = {
 When any of these properties are not defined, as in the original example (`TFMG_thermal = {}`), they are automatically populated by a default value.
 
 For more details into how to use TFMG_thermal, look into [templates.lua](https://github.com/oobanooba0/TFMG-thermal/blob/main/templates.lua)
+
+
+CREDITS:
+
+Contributors:
+
+oobanooba - main creator.
+Polka - bugfixes
