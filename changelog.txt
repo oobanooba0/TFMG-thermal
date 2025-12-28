@@ -1,4 +1,9 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.4.11
+Date: 2025-12-28
+  Changes:
+    - Added a sanity check for machines that have no collision box or selection box. Machines that have neither, probably shouldn't have thermal interfaces. If you try this, you recive a custom error, telling you to, like, not.
+---------------------------------------------------------------------------------------------------
 Version: 0.4.10
 Date: 2025-12-26
   Bugfixes:

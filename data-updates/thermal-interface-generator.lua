@@ -211,7 +211,8 @@ end
   return collision_box_set end
 
   local function calculate_machine_footprint(machine)--calculate the number of tiles a machine takes up.
-    local machine_box = machine.collision_box
+    local machine_box = machine.collision_box or machine.selection_box
+    if not machine_box then log_thermal_interface_error("attempted to generate thermal interface for machine that doesn't have a collision box, nor a selection box. machines like this probably shouldn't have thermal interfaces. Check"..machine) end
     --We're gonna find number of tiles a machine takes up, so we have to round outwards to thhe outer corners of the tile.
     local x_max = semiceil(machine_box[2][1])
     local x_min = semifloor(machine_box[1][1])
