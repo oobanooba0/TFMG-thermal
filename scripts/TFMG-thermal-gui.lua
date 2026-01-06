@@ -102,12 +102,12 @@ function TFMG_thermal_gui.on_gui_tick()
 			local energy_multiplier = interface.machine.consumption_bonus + 1
 			local heat_output = (gui_storage.base_heat_output * energy_multiplier)/1000000
 
-			gui_storage.gui["1"]["temperature-reading"].caption = "Temperature: "..string.format("%.2f",temperature).."°C"
+			gui_storage.gui["1"]["temperature-reading"].caption = {"thermal-gui.temperature-reading",string.format("%.2f",temperature)}
 			gui_storage.gui["1"]["heat-bar"].value = temperature/max_working_temperature
 			gui_storage.gui["1"]["heat-bar2"].value = (temperature-max_working_temperature)/(max_safe_temperature-max_working_temperature)
-			gui_storage.gui["heating"].caption = "Heat output: "..string.format("%.2f",heat_output).."MW"
-			gui_storage.gui["working"].caption = "Maximum working temperature: "..max_working_temperature.."°C"
-			gui_storage.gui["damage"].caption = "Maximum safe temperature: "..max_safe_temperature.."°C"
+			gui_storage.gui["heating"].caption = {"thermal-gui.heating",string.format("%.2f",heat_output)} 
+			gui_storage.gui["working"].caption = {"thermal-gui.working",max_working_temperature}
+			gui_storage.gui["damage"].caption = {"thermal-gui.damage",max_safe_temperature}
 		end
 	end
 end
