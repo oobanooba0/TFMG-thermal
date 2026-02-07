@@ -357,49 +357,47 @@ end
   --    data:extend({interface})
   --  end
 
-    local function generate_thermal_interface(machine)
+  local function generate_thermal_interface(machine)
     if not machine.TFMG_thermal then return end -- Check if machine is opted into the thermal system. 
     local specific_heat = calculate_specific_heat(machine)
-    local connection_set = generate_thermal_interface_connection_set(machine)
-    local collision_set = generate_thermal_interface_collision_box_set(machine)
+
+    ---double check if any of this code actually matters
     local surface_conditions = nil
     if feature_flags["space_travel"] then--only if we have space age features enabled can we use surface conditions. Surface conditions are stored in the interface prototype, dispite this actually not having any direct effect. Surface conditions dont affect entities placed by script.
       surface_conditions = build_and_check_surface_conditions(machine)
     end
     machine.TFMG_thermal.surface_conditions = surface_conditions
-    for direction, connections in pairs(connection_set) do
-      local interface = {--machine interface template
-        type = "assembling-machine",
-        name = machine.name .. "-thermal-interface"..direction,
-        localised_name = {"entity-name.thermal-interface", machine.localised_name or {"entity-name."..machine.name}},
-        order = "y"..machine.type,
-        icons = generate_thermal_interface_icons(machine),
-        flags = {"placeable-neutral", "player-creation","not-on-map","not-blueprintable","not-deconstructable","no-automated-item-insertion","no-automated-item-removal"},
-        collision_mask = {layers ={}}, --the interface does not concern itself with the plight of lesser entities.
-        collision_box = collision_set[direction], --ensures correct placement
-        selection_box = collision_set[direction],
-        resistances  = resistances,
-        selection_priority = 40,
-        selectable_in_game = true,
-        allow_copy_paste = false,
-        hidden = true,
-        crafting_speed = 1,
-        crafting_categories = {"nothing"},
-        energy_usage = "1W",
-        energy_source = {
-          type = "heat",
-          max_temperature = 1000,--These two values just match heat pipes, and should be fine in pretty much all sane use cases.
-          minimum_glow_temperature = 350,
-          specific_heat = specific_heat.."J",
-          max_transfer = "100TW",--Ultimately, this will be limited more by connections than anything else.
-          connections = connections--we shall connect the world.
-        },
-      }
-      --generate_heat_patches_from_connections(interface.energy_souce.connections,interface)
-      --We're looking at an entirely new setup to generate the heat connections with the correct setup
-      if feature_flags["space_travel"] then interface.surface_conditions = surface_conditions end
-      data:extend({interface})
-    end
+    local interface = {--machine interface template
+      type = "assembling-machine",
+      name = machine.name .. "-thermal-interface",
+      localised_name = {"entity-name.thermal-interface", machine.localised_name or {"entity-name."..machine.name}},
+      order = "y"..machine.type,
+      icons = generate_thermal_interface_icons(machine),
+      flags = {"placeable-neutral", "player-creation","not-on-map","not-blueprintable","not-deconstructable","no-automated-item-insertion","no-automated-item-removal"}, --flags prevent attempted inserter interactions
+      collision_mask = {layers ={}}, --the interface does not concern itself with the plight of lesser entities.
+      collision_box = machine.collision_box,
+      selection_box = machine.collision_box,
+      resistances  = resistances,
+      selection_priority = 40,
+      selectable_in_game = true,
+      allow_copy_paste = false,
+      hidden = true,
+      crafting_speed = 1,
+      crafting_categories = {"nothing"},
+      energy_usage = "1W",
+      energy_source = {
+        type = "heat",
+        max_temperature = 1000,--These two values just match heat pipes, and should be fine in pretty much all sane use cases.
+        minimum_glow_temperature = 350,
+        specific_heat = specific_heat.."J",
+        max_transfer = "100TW",--Ultimately, this will be limited more by connections than anything else.
+        connections = generate_thermal_interface_connections(machine) --we shall connect the world
+      },
+    }
+    --generate_heat_patches_from_connections(interface.energy_souce.connections,interface)
+    --We're looking at an entirely new setup to generate the heat connections with the correct setup
+    if feature_flags["space_travel"] then interface.surface_conditions = surface_conditions end
+    data:extend({interface})
     
     --gather information we will put into a mod data table to recall during runtime.
     local heat_ratio = machine.TFMG_thermal.heat_ratio or 0.5
@@ -409,13 +407,8 @@ end
     local base_heat_output = energy_usage_per_tick*heat_ratio*60--in W
     local base_temperature_increase_per_tick = (energy_usage_per_tick*heat_ratio)/(specific_heat)--precalculate the per tick base heat output of the machine. That way we don't need to calculate it in runtime.
     local default_temperature = 15
-    --if max_working_temperature >= max_safe_temperature then
-    --  default_temperature = max_safe_temperature - 10
-    --else
-    --  default_temperature = max_working_temperature - 10
-    --end
 
-    local rotation_ruleset, rotation_ruleset_world = set_rotation_rules(machine)
+    local rotation_ruleset, rotation_ruleset_world = set_rotation_rules(machine) --rotation rulesets and such might have changed just now
     local script_type = "crafting-machine"
     local heat_when_disabled = false
     if machine.TFMG_thermal.heat_when_disabled_by_script then heat_when_disabled = true end
@@ -441,7 +434,7 @@ end
       }
     }
     data:extend({machine_data})
-
+    --modify the machine prototype
     -- now add our custom tooltips
     if not machine.custom_tooltip_fields then machine.custom_tooltip_fields = {} end
     table.insert(machine.custom_tooltip_fields,{
@@ -467,6 +460,7 @@ end
       })
     end
   end
+
 --generate thermal interfaces for thrusters. They cannot be rotated and lack many properties that crafting machines do.
   local function generate_thermal_interface_thruster(machine)
     if not machine.TFMG_thermal then return end -- Check if machine is opted into the thermal system. 
