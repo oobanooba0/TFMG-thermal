@@ -314,7 +314,50 @@ end
   return specific_heat end
 
 --generate a thermal interfaces, and add it to data.raw
-  local function generate_thermal_interface(machine)
+  --local function generate_thermal_interface(machine)
+  --  if not machine.TFMG_thermal then return end -- Check if machine is opted into the thermal system. 
+  --  local specific_heat = calculate_specific_heat(machine)
+  --  local connection_set = generate_thermal_interface_connection_set(machine)
+  --  local collision_set = generate_thermal_interface_collision_box_set(machine)
+  --  local surface_conditions = nil
+  --  if feature_flags["space_travel"] then--only if we have space age features enabled can we use surface conditions. Surface conditions are stored in the interface prototype, dispite this actually not having any direct effect. Surface conditions dont affect entities placed by script.
+  --    surface_conditions = build_and_check_surface_conditions(machine)
+  --  end
+  --  machine.TFMG_thermal.surface_conditions = surface_conditions
+  --  for direction, connections in pairs(connection_set) do
+  --    local interface = {--machine interface template
+  --      type = "reactor",
+  --      name = machine.name .. "-thermal-interface"..direction,
+  --      localised_name = {"entity-name.thermal-interface", machine.localised_name or {"entity-name."..machine.name}},
+  --      order = "y"..machine.type,
+  --      icons = generate_thermal_interface_icons(machine),
+  --      flags = {"placeable-neutral", "player-creation","not-on-map","not-blueprintable","not-deconstructable","no-automated-item-insertion","no-automated-item-removal"},
+  --      collision_mask = {layers ={}}, --the interface does not concern itself with the plight of lesser entities.
+  --      collision_box = collision_set[direction], --ensures correct placement
+  --      selection_box = collision_set[direction],
+  --      resistances  = resistances,
+  --      selection_priority = 40,
+  --      selectable_in_game = true,
+  --      allow_copy_paste = false,
+  --      hidden = true,
+  --      consumption = "1W", -- this is actually irrelevant, but its required by the reactor prototype.
+  --      energy_source = { --also irrelevant, since interfaces are disabled by script at birth, but wube demands it.
+  --        type = "void",
+  --      },
+  --      heat_buffer = {
+  --        max_temperature = 1000,--These two values just match heat pipes, and should be fine in pretty much all sane use cases.
+  --        minimum_glow_temperature = 350,
+  --        specific_heat = specific_heat.."J",
+  --        max_transfer = "100TW",--Ultimately, this will be limited more by connections than anything else.
+  --        connections = connections--we shall connect the world.
+  --      },
+  --    }
+  --    generate_heat_patches_from_connections(interface.heat_buffer.connections,interface)
+  --    if feature_flags["space_travel"] then interface.surface_conditions = surface_conditions end
+  --    data:extend({interface})
+  --  end
+
+    local function generate_thermal_interface(machine)
     if not machine.TFMG_thermal then return end -- Check if machine is opted into the thermal system. 
     local specific_heat = calculate_specific_heat(machine)
     local connection_set = generate_thermal_interface_connection_set(machine)
@@ -326,7 +369,7 @@ end
     machine.TFMG_thermal.surface_conditions = surface_conditions
     for direction, connections in pairs(connection_set) do
       local interface = {--machine interface template
-        type = "reactor",
+        type = "assembling-machine",
         name = machine.name .. "-thermal-interface"..direction,
         localised_name = {"entity-name.thermal-interface", machine.localised_name or {"entity-name."..machine.name}},
         order = "y"..machine.type,
@@ -340,11 +383,11 @@ end
         selectable_in_game = true,
         allow_copy_paste = false,
         hidden = true,
-        consumption = "1W", -- this is actually irrelevant, but its required by the reactor prototype.
-        energy_source = { --also irrelevant, since interfaces are disabled by script at birth, but wube demands it.
-          type = "void",
-        },
-        heat_buffer = {
+        crafting_speed = 1,
+        crafting_categories = {"nothing"},
+        energy_usage = "1W",
+        energy_source = {
+          type = "heat",
           max_temperature = 1000,--These two values just match heat pipes, and should be fine in pretty much all sane use cases.
           minimum_glow_temperature = 350,
           specific_heat = specific_heat.."J",
@@ -352,11 +395,9 @@ end
           connections = connections--we shall connect the world.
         },
       }
-
-      generate_heat_patches_from_connections(interface.heat_buffer.connections,interface)
-
+      --generate_heat_patches_from_connections(interface.energy_souce.connections,interface)
+      --We're looking at an entirely new setup to generate the heat connections with the correct setup
       if feature_flags["space_travel"] then interface.surface_conditions = surface_conditions end
-
       data:extend({interface})
     end
     

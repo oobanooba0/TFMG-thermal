@@ -8,6 +8,10 @@ data:extend({
     type = "recipe-category",
     name = "radiator"
   },
+  {
+    type = "recipe-category",
+    name = "nothing"
+  },
   {--Theres nothing particularly important about this recipe, it just acts as a way to get a radiator to operate forever.
     type = "recipe",
     category = "radiator",
