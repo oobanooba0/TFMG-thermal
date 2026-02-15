@@ -3,7 +3,7 @@ local bplib = require("__bplib__.blueprint")
 local BlueprintBuild = bplib.BlueprintBuild
 local BlueprintSetup = bplib.BlueprintSetup
 local flib_table = require("__flib__/table")
- 
+
 --rotation ruleset lookup table
   --R = Rotatable
   --r = Rotatable, but 180 degrees.
