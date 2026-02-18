@@ -26,30 +26,49 @@ for name,damage_type in pairs(data.raw["damage-type"]) do --generate our set of 
   end
 end
 
+
 --Heat interface connection graphic definitions
+  local disconnected_shift = 0.3
+  local connector_graphics = {--improved connector graphics, so things should be a little easier to work with.
+    disconnected = {
+      north = {size = 64, filename = "__base__/graphics/entity/heat-pipe/heat-pipe-ending-down-1.png", scale = 0.5,shift = {0,disconnected_shift}},
+      east = {size = 64, filename = "__base__/graphics/entity/heat-pipe/heat-pipe-ending-left-1.png", scale = 0.5,shift = {-disconnected_shift,0}},
+      south = {size = 64, filename = "__base__/graphics/entity/heat-pipe/heat-pipe-ending-up-1.png", scale = 0.5,shift = {0,-disconnected_shift}},
+      west = {size = 64, filename = "__base__/graphics/entity/heat-pipe/heat-pipe-ending-right-1.png", scale = 0.5,shift = {disconnected_shift,0}},
+    },
+    disconnected_glow = {
+      north = {size = 64, filename = "__base__/graphics/entity/heat-pipe/heated-ending-down-1.png", scale = 0.5,shift = {0,disconnected_shift}},
+      east = {size = 64, filename = "__base__/graphics/entity/heat-pipe/heated-ending-left-1.png", scale = 0.5,shift = {-disconnected_shift,0}},
+      south = {size = 64, filename = "__base__/graphics/entity/heat-pipe/heated-ending-up-1.png", scale = 0.5,shift = {0,-disconnected_shift}},
+      west = {size = 64, filename = "__base__/graphics/entity/heat-pipe/heated-ending-right-1.png", scale = 0.5,shift = {disconnected_shift,0}},
+    },
+  }
+
+
   local heat_pipe_connected = {--connected
     {size = 64, filename = "__base__/graphics/entity/heat-pipe/heat-pipe-straight-vertical-1.png", scale = 0.5},
     {size = 64, filename = "__base__/graphics/entity/heat-pipe/heat-pipe-straight-horizontal-1.png", scale = 0.5},
     {size = 64, filename = "__base__/graphics/entity/heat-pipe/heat-pipe-straight-vertical-1.png", scale = 0.5},
     {size = 64, filename = "__base__/graphics/entity/heat-pipe/heat-pipe-straight-horizontal-1.png", scale = 0.5},
   }
-  local heat_pipe_disconnected = {--disconnected
-    {size = 64, filename = "__base__/graphics/entity/heat-pipe/heat-pipe-ending-down-1.png", scale = 0.5,shift = {0,-0.3}},
-    {size = 64, filename = "__base__/graphics/entity/heat-pipe/heat-pipe-ending-left-1.png", scale = 0.5,shift = {0.3,0}},
-    {size = 64, filename = "__base__/graphics/entity/heat-pipe/heat-pipe-ending-up-1.png", scale = 0.5,shift = {0,0.3}},
-    {size = 64, filename = "__base__/graphics/entity/heat-pipe/heat-pipe-ending-right-1.png", scale = 0.5,shift = {-0.3,0}},
+    local heat_pipe_glow_connected = {--connected hot
+    {size = 64, filename = "__base__/graphics/entity/heat-pipe/heated-straight-vertical-1.png", scale = 0.5},
+    {size = 64, filename = "__base__/graphics/entity/heat-pipe/heated-straight-horizontal-1.png", scale = 0.5},
+    {size = 64, filename = "__base__/graphics/entity/heat-pipe/heated-straight-vertical-1.png", scale = 0.5},
+    {size = 64, filename = "__base__/graphics/entity/heat-pipe/heated-straight-horizontal-1.png", scale = 0.5},
   }
-  local heat_pipe_glow_connected = {--connected hot
-    {size = 64, filename = "__base__/graphics/entity/heat-pipe/heated-straight-vertical-1.png", scale = 0.5},
-    {size = 64, filename = "__base__/graphics/entity/heat-pipe/heated-straight-horizontal-1.png", scale = 0.5},
-    {size = 64, filename = "__base__/graphics/entity/heat-pipe/heated-straight-vertical-1.png", scale = 0.5},
-    {size = 64, filename = "__base__/graphics/entity/heat-pipe/heated-straight-horizontal-1.png", scale = 0.5},
+
+  local heat_pipe_disconnected = {--disconnected
+    {size = 64, filename = "__base__/graphics/entity/heat-pipe/heat-pipe-ending-down-1.png", scale = 0.5,shift = {0,0.3}},
+    {size = 64, filename = "__base__/graphics/entity/heat-pipe/heat-pipe-ending-left-1.png", scale = 0.5,shift = {-0.3,0}},
+    {size = 64, filename = "__base__/graphics/entity/heat-pipe/heat-pipe-ending-up-1.png", scale = 0.5,shift = {0,-0.3}},
+    {size = 64, filename = "__base__/graphics/entity/heat-pipe/heat-pipe-ending-right-1.png", scale = 0.5,shift = {0.3,0}},
   }
   local heat_pipe_glow_disconnected = {--disconnected hot
-    {size = 64, filename = "__base__/graphics/entity/heat-pipe/heated-ending-down-1.png", scale = 0.5,shift = {0,-0.3}},
-    {size = 64, filename = "__base__/graphics/entity/heat-pipe/heated-ending-left-1.png", scale = 0.5,shift = {0.3,0}},
-    {size = 64, filename = "__base__/graphics/entity/heat-pipe/heated-ending-up-1.png", scale = 0.5,shift = {0,0.3}},
-    {size = 64, filename = "__base__/graphics/entity/heat-pipe/heated-ending-right-1.png", scale = 0.5,shift = {-0.3,-0}},
+    {size = 64, filename = "__base__/graphics/entity/heat-pipe/heated-ending-down-1.png", scale = 0.5,shift = {0,0.3}},
+    {size = 64, filename = "__base__/graphics/entity/heat-pipe/heated-ending-left-1.png", scale = 0.5,shift = {-0.3,0}},
+    {size = 64, filename = "__base__/graphics/entity/heat-pipe/heated-ending-up-1.png", scale = 0.5,shift = {0,-0.3}},
+    {size = 64, filename = "__base__/graphics/entity/heat-pipe/heated-ending-right-1.png", scale = 0.5,shift = {0.3,0}},
   }
 --icon graphic generation
   local function generate_thermal_interface_icons(machine) --handles the creation of an entity icon for the editor gui.
@@ -314,48 +333,6 @@ end
   return specific_heat end
 
 --generate a thermal interfaces, and add it to data.raw
-  --local function generate_thermal_interface(machine)
-  --  if not machine.TFMG_thermal then return end -- Check if machine is opted into the thermal system. 
-  --  local specific_heat = calculate_specific_heat(machine)
-  --  local connection_set = generate_thermal_interface_connection_set(machine)
-  --  local collision_set = generate_thermal_interface_collision_box_set(machine)
-  --  local surface_conditions = nil
-  --  if feature_flags["space_travel"] then--only if we have space age features enabled can we use surface conditions. Surface conditions are stored in the interface prototype, dispite this actually not having any direct effect. Surface conditions dont affect entities placed by script.
-  --    surface_conditions = build_and_check_surface_conditions(machine)
-  --  end
-  --  machine.TFMG_thermal.surface_conditions = surface_conditions
-  --  for direction, connections in pairs(connection_set) do
-  --    local interface = {--machine interface template
-  --      type = "reactor",
-  --      name = machine.name .. "-thermal-interface"..direction,
-  --      localised_name = {"entity-name.thermal-interface", machine.localised_name or {"entity-name."..machine.name}},
-  --      order = "y"..machine.type,
-  --      icons = generate_thermal_interface_icons(machine),
-  --      flags = {"placeable-neutral", "player-creation","not-on-map","not-blueprintable","not-deconstructable","no-automated-item-insertion","no-automated-item-removal"},
-  --      collision_mask = {layers ={}}, --the interface does not concern itself with the plight of lesser entities.
-  --      collision_box = collision_set[direction], --ensures correct placement
-  --      selection_box = collision_set[direction],
-  --      resistances  = resistances,
-  --      selection_priority = 40,
-  --      selectable_in_game = true,
-  --      allow_copy_paste = false,
-  --      hidden = true,
-  --      consumption = "1W", -- this is actually irrelevant, but its required by the reactor prototype.
-  --      energy_source = { --also irrelevant, since interfaces are disabled by script at birth, but wube demands it.
-  --        type = "void",
-  --      },
-  --      heat_buffer = {
-  --        max_temperature = 1000,--These two values just match heat pipes, and should be fine in pretty much all sane use cases.
-  --        minimum_glow_temperature = 350,
-  --        specific_heat = specific_heat.."J",
-  --        max_transfer = "100TW",--Ultimately, this will be limited more by connections than anything else.
-  --        connections = connections--we shall connect the world.
-  --      },
-  --    }
-  --    generate_heat_patches_from_connections(interface.heat_buffer.connections,interface)
-  --    if feature_flags["space_travel"] then interface.surface_conditions = surface_conditions end
-  --    data:extend({interface})
-  --  end
 
   local function generate_thermal_interface(machine)
     if not machine.TFMG_thermal then return end -- Check if machine is opted into the thermal system. 
@@ -391,7 +368,9 @@ end
         minimum_glow_temperature = 350,
         specific_heat = specific_heat.."J",
         max_transfer = "100TW",--Ultimately, this will be limited more by connections than anything else.
-        connections = generate_thermal_interface_connections(machine) --we shall connect the world
+        connections = generate_thermal_interface_connections(machine), --we shall connect the world
+        pipe_covers = connector_graphics.disconnected,
+        heat_pipe_covers = connector_graphics.disconnected_glow,
       },
     }
     --generate_heat_patches_from_connections(interface.energy_souce.connections,interface)

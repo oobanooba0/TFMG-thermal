@@ -316,6 +316,8 @@ function TFMG_thermal_core.surface_condition_compare(surface,conditions)--condit
     table.insert(storage.tfmg_job_list[tick][type],data)
   end
 
+---actual thermal core
+---
   local function machine_status_control(v,temperature,max_safe_temp,max_working_temp,delta_time)--handle the enable,disable and status setting of a machine.
     if temperature >= max_safe_temp then--KILL KILL KILL KILL
 			v.machine.disabled_by_script = true
