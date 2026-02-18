@@ -2,7 +2,7 @@ local TFMG_thermal_compound = {}
 
   function TFMG_thermal_compound.handle_build_event(event)
     local machine = event.entity
-    if not machine.vald then game.print("tried to build invalid machine") return end
+    if not machine.valid then game.print("tried to build invalid machine") return end
 
     local thermal_prototype = prototypes.mod_data["TFMG-thermal-"..machine.name].data
 
@@ -20,18 +20,33 @@ local TFMG_thermal_compound = {}
     local conditions = thermal_prototype.surface_conditions
     if TFMG_thermal_util.surface_condition_compare(surface,conditions) == false then return end
 
-    local interface = surface.create_entity({name = machine.name.."thermal-interface", direction = direction, position})
+    local interface = surface.create_entity({name = machine.name.."-thermal-interface", direction = direction, position = position})
     game.print(serpent.block(interface))
 
     local _reg_number, unit_number, _type = script.register_on_object_destroyed(machine)
     
     interface.disabled_by_script = true
+    interface.destructible = false
 
+    storage.interfaces[machine.name][unit_number] = {machine = machine, interface = interface}--it looks like we probably will still need to save direction, but lets hold off on it now
+    storage.registered_entities[unit_number] = machine.name--we use this so we can know what interface table the entity belongs to when we destroy it, since we can't get this info from a destoryed entity
+  end
 
-    --storage management here, double check its all sane
-
-
-
+  function TFMG_thermal_compound.handle_destroy_event(event)
+    if not storage.registered_entities then return end
+    local unit_number = event.useful_id
+    local machine_name = storage.registered_entities[unit_number]--recall what kind of machine we destroyed
+    if machine_name and storage.interfaces[machine_name] and storage.interfaces[machine_name][unit_number] then
+  		local v = storage.interfaces[machine_name][unit_number]
+  		if v.interface.destroy() == true then
+  		  storage.interfaces[machine_name][unit_number] = nil
+        storage.registered_entities[unit_number] = nil --Clear the entry, as its irrelevant now
+        game.print("deconstruction"..unit_number)
+      else
+        game.print("destruction failed")
+      end
+    else game.print("no storage entry here")
+    end
   end
 
 return TFMG_thermal_compound
