@@ -183,6 +183,7 @@ data:extend({
         { variation = 18, main_offset = util.by_pixel(10, 5), shadow_offset = util.by_pixel(35, 31), show_shadow = true }
       }
     )
+
 if feature_flags["space_travel"] then
 --space radiator 
   --graphics helpers.

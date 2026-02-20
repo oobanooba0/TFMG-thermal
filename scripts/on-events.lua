@@ -104,12 +104,12 @@
       TFMG_thermal_compound.handle_build_event(event)
     end
   )
-  script.on_event( ---!!!
-    defines.events.script_raised_built,
-    function(event)
-      TFMG_thermal_core.handle_bp_proxy_build_event(event)
-    end,{{filter = "name", name = "TFMG-thermal-bp-proxy"}}
-  )
+  --script.on_event( ---!!!
+  --  defines.events.script_raised_built,
+  --  function(event)
+  --    TFMG_thermal_core.handle_bp_proxy_build_event(event)
+  --  end,{{filter = "name", name = "TFMG-thermal-bp-proxy"}}
+  --)
 
 --destroy events
   script.on_event(
@@ -119,42 +119,38 @@
       TFMG_thermal_gui.gui_cleanup(event)
   	end
   )
-  script.on_event( ---!!!
-    defines.events.on_pre_ghost_deconstructed,
-    function(event)
-      TFMG_thermal_core.handle_ghost_deconstruction_event(event)
+  --script.on_event( ---!!!
+  --  defines.events.on_pre_ghost_deconstructed,
+  --  function(event)
+  --    TFMG_thermal_core.handle_ghost_deconstruction_event(event)
+  --  end
+  --)
+
+--rotate events
+  script.on_event("interface-rotate",
+    function (event)
+      TFMG_thermal_compound.handle_transform(event,"rotate")
+    end
+  )
+  script.on_event("interface-rotate-reverse",
+    function (event)
+      TFMG_thermal_compound.handle_transform(event,"rotate_reverse")
+    end
+  )
+  script.on_event("interface-flip-horizontal",
+    function (event)
+      TFMG_thermal_compound.handle_transform(event,"flip_horizontal")
+    end
+  )
+  script.on_event("interface-flip-vertical",
+    function (event)
+      TFMG_thermal_compound.handle_transform(event,"flip_vertical")
     end
   )
 
---rotate events
---  script.on_event("interface-rotate",
---    function (event)
---      local transform = "rotate"
---      TFMG_thermal_core.handle_transform(event,transform)
---    end
---  )
---  script.on_event("interface-rotate-reverse",
---    function (event)
---      local transform = "rotate_reverse"
---      TFMG_thermal_core.handle_transform(event,transform)
---    end
---  )
---  script.on_event("interface-flip-horizontal",
---    function (event)
---      local transform = "flip_horizontal"
---      TFMG_thermal_core.handle_transform(event,transform)
---    end
---  )
---  script.on_event("interface-flip-vertical",
---    function (event)
---      local transform = "flip_vertical"
---      TFMG_thermal_core.handle_transform(event,transform)
---    end
---  )
 
-
-  ---Sketchy Gui related events. Replace these later
-  ---"RePlaCe ThEsE LaTeR"
+--Sketchy Gui related events. Replace these later
+--"RePlaCe ThEsE LaTeR"
   script.on_event(defines.events.on_player_created, 
   function(event)
   	TFMG_thermal_gui.on_player_join(event)
