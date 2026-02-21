@@ -1,7 +1,3 @@
-
-
-
-
 local TFMG_thermal_compound = {}
 
 ---basic build events
@@ -62,16 +58,13 @@ local TFMG_thermal_compound = {}
   function TFMG_thermal_compound.handle_transform(event,transform) --note that the input event occurs before the game actually does anything.
     local v = TFMG_thermal_util.get_entry_from_input_event(event)
     if not v then game.print("no interface entry found from input event") return end
-    
+
     --gather rotation rules
     local rotation_ruleset = prototypes.mod_data["TFMG-thermal-"..event.selected_prototype.name].data.rotation_ruleset_world
     if rotation_ruleset == "_01" then return end --dont rotate if not rotatable.
 
     --apply rotation, generic method.
-    TFMG_thermal_util.advanced_rotate(v.interface,transform,rotation_ruleset)
+    TFMG_thermal_util.advanced_rotate(v.interface,transform,rotation_ruleset) --flawed in the sense that non rotatalbe entitys that can become rotatable can be broken
   end
-
-
-
 
 return TFMG_thermal_compound

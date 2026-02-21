@@ -1,16 +1,12 @@
-
-
-
-
 local TFMG_thermal_util = {}
-  
+
   TFMG_thermal_util.ruleset_lookup = {
   --rotation ruleset lookup table
   --R = Rotatable
   --r = Rotatable, but 180 degrees.
   --F = flippable,
-  --08 = 8 unique variations
-  --00 = 1 unique directions
+  --08 = 8 unique variations.
+  --01 = 1 unique variations.
 
   --we map each initial orientation, to next orientation.
   --rotations are formatted differently to the base game. 1-4 are NESW, and 5-8 are NESW (mirrored)
@@ -34,7 +30,7 @@ local TFMG_thermal_util = {}
     },
   }
 
-  TFMG_thermal_util.direction_to_orientation = {--provide direction, then mirroring
+  TFMG_thermal_util.direction_to_orientation = {--provide direction, then mirroring, return orientation
     [defines.direction.north] = {[false] = 1, [true] = 5},
     [defines.direction.east] = {[false] = 2, [true] = 6},
     [defines.direction.south] = {[false] = 3, [true] = 7},
@@ -51,7 +47,6 @@ local TFMG_thermal_util = {}
     [7] = {direction = defines.direction.south, mirroring = true},
     [8] = {direction = defines.direction.west, mirroring = true},
   }
-
 
   function TFMG_thermal_util.advanced_rotate(entity,transform,ruleset)
     if not ruleset then ruleset = "RF_08" end
@@ -73,7 +68,6 @@ local TFMG_thermal_util = {}
 
   function TFMG_thermal_util.get_entry_from_input_event(event)
 
-    --we're gonna first check if we're in situation where things should rotate
     --check if the thing we're hovering has a thermal prototype. if not, we can quit while we're ahead.
     if not event.selected_prototype or storage.interfaces[event.selected_prototype.name] == nil then return end
 
