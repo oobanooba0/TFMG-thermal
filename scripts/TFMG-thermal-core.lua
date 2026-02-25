@@ -253,9 +253,9 @@ function TFMG_thermal_core.surface_condition_compare(surface,conditions)--condit
           end
           if flip_horizontal == true then tag_rotation = ruleset_lookup[rotation_ruleset]["flip_horizontal"][tag_rotation]  end
           if flip_vertical == true then tag_rotation = ruleset_lookup[rotation_ruleset]["flip_vertical"][tag_rotation] end
-          
+
           bp_entity.tags.thermal_direction = tag_rotation
-          
+
           local bp_location = bp_locations[bp_index]
           direction_check = ((tag_rotation-1) * 4)
           if direction_check > 16 then direction_check = direction_check - 16 end

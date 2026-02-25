@@ -354,7 +354,7 @@ end
       collision_mask = {layers ={}}, --the interface does not concern itself with the plight of lesser entities.
       collision_box = machine.collision_box,
       selection_box = machine.collision_box,
-      resistances  = resistances,
+      --resistances  = resistances,
       selection_priority = 40,
       selectable_in_game = true,
       allow_copy_paste = false,

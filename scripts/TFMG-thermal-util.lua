@@ -56,6 +56,7 @@ local TFMG_thermal_util = {}
     local new_direction = TFMG_thermal_util.orientation_to_direction[new_orientation]
     entity.direction = new_direction.direction
     entity.mirroring = new_direction.mirroring
+    --we should do something, to verify consistency between the interface and machine.
   end
 
   function TFMG_thermal_util.surface_condition_compare(surface,conditions)--conditions should be as table
@@ -92,5 +93,21 @@ local TFMG_thermal_util = {}
     if machine == nil then return end
     local v = interface_table[machine.unit_number]
   return v end
+
+  local INVISIBLE_LINE = {
+	color = { 0, 0, 0, 0 },
+	width = 0,
+	from = { 0, 0 },
+	to = { 0, 0 },
+	surface = 1,
+  }
+
+  function TFMG_thermal_util.subtick_trigger_abuse(data)
+    local obj = rendering.draw_line(INVISIBLE_LINE)
+	  local rn = script.register_on_object_destroyed(obj)
+    if not storage.prebuild_data then storage.prebuild_data = {} end
+    storage.prebuild_data[rn] = data
+    obj.destroy()
+  end
 
 return TFMG_thermal_util

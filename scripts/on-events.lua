@@ -40,6 +40,7 @@
     if storage.registered_entities == nil then
       storage.registered_entities = {}
     end
+    if not storage.prebuild_data then storage.prebuild_data = {} end
     if storage.tfmg_job_list == nil then
       storage.tfmg_job_list = {}
     end
@@ -73,6 +74,7 @@
   script.on_event(
     defines.events.on_tick,--"Its HaNlDeR sHoUldNt InCluDe PeRfOrMaNce HeAvY CoDe." You can't tell me what to do.
     function(event)
+      TFMG_thermal_compound.post_build(event)
       TFMG_thermal_core.thermal_update(event)
       TFMG_thermal_gui.on_gui_tick()
     end
@@ -102,6 +104,14 @@
     defines.events.on_entity_cloned,
     function(event)
       TFMG_thermal_compound.handle_build_event(event)
+    end
+  )
+
+  --on prebuild
+  script.on_event(
+    defines.events.on_pre_build,
+    function(event)
+      TFMG_thermal_compound.on_pre_build(event)
     end
   )
   --script.on_event( ---!!!
@@ -148,6 +158,13 @@
     end
   )
 
+--blueprint setup event
+  script.on_event(
+    defines.events.on_player_setup_blueprint,
+    function(event)
+      TFMG_thermal_compound.bp_setup(event)
+    end
+  )
 
 --Sketchy Gui related events. Replace these later
 --"RePlaCe ThEsE LaTeR"
