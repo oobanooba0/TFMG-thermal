@@ -74,7 +74,7 @@
   script.on_event(
     defines.events.on_tick,--"Its HaNlDeR sHoUldNt InCluDe PeRfOrMaNce HeAvY CoDe." You can't tell me what to do.
     function(event)
-      TFMG_thermal_core.thermal_update(event)
+      TFMG_thermal_core.thermal_update()
       TFMG_thermal_gui.on_gui_tick()
     end
   )
@@ -113,12 +113,6 @@
       TFMG_thermal_compound.on_pre_build(event)
     end
   )
-  --script.on_event( ---!!!
-  --  defines.events.script_raised_built,
-  --  function(event)
-  --    TFMG_thermal_core.handle_bp_proxy_build_event(event)
-  --  end,{{filter = "name", name = "TFMG-thermal-bp-proxy"}}
-  --)
 
 --destroy events
   script.on_event(
@@ -128,12 +122,6 @@
       TFMG_thermal_gui.gui_cleanup(event)
   	end
   )
-  --script.on_event( ---!!!
-  --  defines.events.on_pre_ghost_deconstructed,
-  --  function(event)
-  --    TFMG_thermal_core.handle_ghost_deconstruction_event(event)
-  --  end
-  --)
 
 --rotate events
   script.on_event("interface-rotate",

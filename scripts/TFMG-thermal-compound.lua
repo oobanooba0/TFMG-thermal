@@ -1,7 +1,7 @@
-local TFMG_thermal_compound = {}
 local bplib = require("__bplib__.blueprint")
 local BlueprintBuild = bplib.BlueprintBuild
 local BlueprintSetup = bplib.BlueprintSetup
+local TFMG_thermal_compound = {}
 
 ---basic build events
   function TFMG_thermal_compound.handle_build_event(event)
@@ -12,14 +12,10 @@ local BlueprintSetup = bplib.BlueprintSetup
     if not thermal_prototype then game.print("no thermal prototype data?") return end
 
     local surface = machine.surface
-    --Some other additional information needed here, in the case that an entity that is not rotatable, needs to be placed
-    --can i find a better method?
-    --basically I want to redo direction management from scratch, which is why im ommitting all the code rn. (the old shit is a mess)
 
     ---surface condition check
     local conditions = thermal_prototype.surface_conditions
     if TFMG_thermal_util.surface_condition_compare(surface,conditions) == false then return end
-
 
     --obtain the correct rotation information
     local interface_direction
@@ -133,21 +129,24 @@ local BlueprintSetup = bplib.BlueprintSetup
     --we're gonna get our orientation, so we can apply our silly little rotation rules
     local tag_orientation = TFMG_thermal_util.direction_to_orientation[bp_entity.tags.TFMG.direction][bp_entity.tags.TFMG.mirroring]
     --make appropriate rotation changes to the tags based on the blueprint.
-    --this could probably be much more efficient, and i have big questions.
-    for i = 2 , (bp_transforms.bp_rotation/4+1) do --this feels like a mistake, I hope to find it.
-      tag_orientation = TFMG_thermal_util.ruleset_lookup[rotation_ruleset]["rotate"][tag_orientation]
-    end
+    --the flips must happen before the rotation, this is because... reasons.
     if bp_transforms.bp_flip_horizontal then
       tag_orientation = TFMG_thermal_util.ruleset_lookup[rotation_ruleset]["flip_horizontal"][tag_orientation]
     end
     if bp_transforms.bp_flip_vertical then
       tag_orientation = TFMG_thermal_util.ruleset_lookup[rotation_ruleset]["flip_vertical"][tag_orientation]
     end
-    --convert tag orientaiton backinto direction and orientation
+    --I have no idea what I was thinking when I made this, like why am I starting with i = 2? God knows. But it works, so i'm not touching it. but ???
+    for i = 2 , (bp_transforms.bp_rotation/4+1) do --this feels like a mistake, I hope to find it.
+      tag_orientation = TFMG_thermal_util.ruleset_lookup[rotation_ruleset]["rotate"][tag_orientation]
+    end
+
+    --convert tag orientaiton back into direction and orientation.
     local new_direction = TFMG_thermal_util.orientation_to_direction[tag_orientation]
     local entity_name = bp_entity.name
 
     TFMG_thermal_util.subtick_trigger_abuse({--we're creating an entity, destorying it and using its destroy event trigger to get some other code to run at the end of the tick.
+    --thanks to the lord thy god for that idea. It's brilliant.
       surface = surface,
       position = bp_location,
       bp_rotation = new_direction,
@@ -156,33 +155,26 @@ local BlueprintSetup = bplib.BlueprintSetup
   end
 
   --the subtick_trigger_abuse function leads here. This happens at the end of a tick, after the blueprint or entity has been built.
+  --this allows us to actually take all this data we collected in the on prebuild event, and use it *after the entities and ghosts in question have actually been built*
   function TFMG_thermal_compound.apply_smuggled_bp_data(prebuild_data)
     --game.print(serpent.block(prebuild_data))
     local surface = prebuild_data.surface
     local entity_name = prebuild_data.entity
     local position = prebuild_data.position
 
-
-    --if this building was blueprinted organically, we should see a ghost of the parent entity here. We'll use that.
+    --if this building was blueprinted organically, we should see a ghost of the parent entity here. We're gonna store our rotation information inside the ghosts tags.
     local parent_ghost = surface.find_entities_filtered({position = position, ghost_name = entity_name})
     if parent_ghost[1] then
-      if not parent_ghost[1].tags then parent_ghost[1].tags = {} end
-      parent_ghost[1].tags = prebuild_data.bp_rotation --only god knows tbh.
+      parent_ghost[1].tags = prebuild_data.bp_rotation --only god knows what the fuck this shit is doing. Wheres "TFMG" coming from? Why does it break if nest the table futher. regardless, since i have no bug reports yet, ill just ignore this shit.
       game.print(serpent.block(parent_ghost[1].tags))
     return end
 
-    --If this building was built instantly (like with the editor, then the real thermal itnterface and parent building will already be here.)
+    --If this building was built instantly or was pasted over an existing building, then we expect there to already be an interface, and we can interact with that.
     local interface = surface.find_entity(entity_name.."-thermal-interface",position)
     if interface then
       interface.direction = prebuild_data.bp_rotation.direction
       interface.mirroring = prebuild_data.bp_rotation.mirroring
     return end
-  end
-
-  --this should apply to situations where you're pasting over thermal entities.
-  local function blueprint_overbuild_handler()
-    --actually, nothing seems to be needed here
-
   end
 
   --if you're copy pasting from surfaces that dont have thermal entities, to ones that do. Don't do that.
@@ -215,7 +207,7 @@ local BlueprintSetup = bplib.BlueprintSetup
 
     --blueprint overbuild stuff
 
-    --through some stroke of luck, or whatever, this just, seems to be redundant
+    --through some stroke of luck or whatever, it seems I dont have to do anything special to buildings that are getting overplaced. The whole data smuggling trick from earlier actually seems to just, do that for me. nice.
   	--local overlap_map = bp_build:map_blueprint_indices_to_overlapping_entities(blueprint_entity_filter)
   	--if not overlap_map or (not next(overlap_map)) then return end
   	---- Map blueprint tags on to the entities
@@ -225,9 +217,7 @@ local BlueprintSetup = bplib.BlueprintSetup
   	--end
   end
 
-
-
---rotation handlers
+--direct rotation handlers
   function TFMG_thermal_compound.handle_transform(event,transform) --note that the input event occurs before the game actually does anything.
     local v = TFMG_thermal_util.get_entry_from_input_event(event)
     if not v then game.print("no interface entry found from input event") return end
@@ -237,7 +227,9 @@ local BlueprintSetup = bplib.BlueprintSetup
     if rotation_ruleset == "_01" then return end --dont rotate if not rotatable.
 
     --apply rotation, generic method.
-    TFMG_thermal_util.advanced_rotate(v.interface,transform,rotation_ruleset) --flawed in the sense that non rotatalbe entitys that can become rotatable can be broken
+    TFMG_thermal_util.advanced_rotate(v.interface,transform,rotation_ruleset) --flawed in the sense that non rotatable entities that can become rotatable can be broken.
   end
+
+  --undo key is evil.
 
 return TFMG_thermal_compound

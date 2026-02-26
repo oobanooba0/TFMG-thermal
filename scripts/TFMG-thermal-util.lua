@@ -61,10 +61,10 @@ local TFMG_thermal_util = {}
 
   function TFMG_thermal_util.surface_condition_compare(surface,conditions)--conditions should be as table
     if conditions == nil then return true end
-      for _ , condition in pairs(conditions) do
-        local surface_condition_value = surface.get_property(prototypes.surface_property[condition.property])
-        if condition.min > surface_condition_value or surface_condition_value > condition.max then return false end
-      end
+    for _ , condition in pairs(conditions) do
+      local surface_condition_value = surface.get_property(prototypes.surface_property[condition.property])
+      if condition.min > surface_condition_value or surface_condition_value > condition.max then return false end
+    end
   return true end
 
   function TFMG_thermal_util.get_entry_from_input_event(event)
@@ -93,7 +93,7 @@ local TFMG_thermal_util = {}
     if machine == nil then return end
     local v = interface_table[machine.unit_number]
   return v end
-
+  --subtick abuse function, copied and modified from The lord thy god
   local INVISIBLE_LINE = {
 	  color = { 0, 0, 0, 0 },
 	  width = 0,

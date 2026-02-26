@@ -1,6 +1,8 @@
 require("prototypes.prototypes")
 require("prototypes.custom-inputs")
 
+--this needs to be removed before release.
+--i will forget this.
 data.raw.furnace.recycler.TFMG_thermal = {
   max_working_temperature = 300,
   max_safe_temperature = 450,
