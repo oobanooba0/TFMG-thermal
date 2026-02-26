@@ -95,11 +95,11 @@ local TFMG_thermal_util = {}
   return v end
 
   local INVISIBLE_LINE = {
-	color = { 0, 0, 0, 0 },
-	width = 0,
-	from = { 0, 0 },
-	to = { 0, 0 },
-	surface = 1,
+	  color = { 0, 0, 0, 0 },
+	  width = 0,
+	  from = { 0, 0 },
+	  to = { 0, 0 },
+	  surface = 1,
   }
 
   function TFMG_thermal_util.subtick_trigger_abuse(data)

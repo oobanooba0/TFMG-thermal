@@ -20,11 +20,26 @@ local BlueprintSetup = bplib.BlueprintSetup
     local conditions = thermal_prototype.surface_conditions
     if TFMG_thermal_util.surface_condition_compare(surface,conditions) == false then return end
 
+
+    --obtain the correct rotation information
+    local interface_direction
+    local interface_mirroring
+
+    if event.tags then --I should double check if entity rotatableness has some sort of goofy impact
+      --if we have ghost tags, that means we should use the rotation information encoded into that
+      interface_direction = event.tags.direction
+      interface_mirroring = event.tags.mirroring
+    else
+      --in all other situations, we adopt our direction from our parent machine.
+      interface_direction = machine.direction
+      interface_mirroring = machine.mirroring
+    end
+
     local interface = surface.create_entity({
-      name = machine.name.."-thermal-interface", 
-      direction = machine.direction,
+      name = machine.name.."-thermal-interface",
       position = machine.position,
-      mirror = machine.mirroring,
+      direction = interface_direction,
+      mirror = interface_mirroring,
     })
 
     local _reg_number, unit_number, _type = script.register_on_object_destroyed(machine)
@@ -46,24 +61,10 @@ local BlueprintSetup = bplib.BlueprintSetup
     local prebuild_data = storage.prebuild_data[event.registration_number]
     if prebuild_data then
       TFMG_thermal_compound.apply_smuggled_bp_data(prebuild_data)
+      storage.prebuild_data[event.registration_number] = nil
     elseif storage.registered_entities then
       TFMG_thermal_compound.destory_compound_entity(event)
     return end
-  end
-
-  function TFMG_thermal_compound.apply_smuggled_bp_data(prebuild_data)
-    game.print(serpent.block(prebuild_data))
-    local surface = prebuild_data.surface
-    local entity_name = prebuild_data.entity
-    local position = prebuild_data.position
-    local interface = surface.find_entity(entity_name.."-thermal-interface",position)
-
-    if interface then
-      interface.direction = prebuild_data.bp_rotation.direction
-      interface.mirroring = prebuild_data.bp_rotation.mirroring
-    end
-    game.print(serpent.block(entity))
-
   end
 
   function TFMG_thermal_compound.destory_compound_entity(event) --destory a compound entity
@@ -140,21 +141,47 @@ local BlueprintSetup = bplib.BlueprintSetup
       tag_orientation = TFMG_thermal_util.ruleset_lookup[rotation_ruleset]["flip_horizontal"][tag_orientation]
     end
     if bp_transforms.bp_flip_vertical then
-      tag_orientation = TFMG_thermal_util.ruleset_lookup[rotation_ruleset]["flip_horizontal"][tag_orientation]
+      tag_orientation = TFMG_thermal_util.ruleset_lookup[rotation_ruleset]["flip_vertical"][tag_orientation]
     end
     --convert tag orientaiton backinto direction and orientation
     local new_direction = TFMG_thermal_util.orientation_to_direction[tag_orientation]
+    local entity_name = bp_entity.name
 
     TFMG_thermal_util.subtick_trigger_abuse({--we're creating an entity, destorying it and using its destroy event trigger to get some other code to run at the end of the tick.
       surface = surface,
       position = bp_location,
       bp_rotation = new_direction,
-      entity = bp_entity.name,
+      entity = entity_name,
     })
+  end
+
+  --the subtick_trigger_abuse function leads here. This happens at the end of a tick, after the blueprint or entity has been built.
+  function TFMG_thermal_compound.apply_smuggled_bp_data(prebuild_data)
+    --game.print(serpent.block(prebuild_data))
+    local surface = prebuild_data.surface
+    local entity_name = prebuild_data.entity
+    local position = prebuild_data.position
+
+
+    --if this building was blueprinted organically, we should see a ghost of the parent entity here. We'll use that.
+    local parent_ghost = surface.find_entities_filtered({position = position, ghost_name = entity_name})
+    if parent_ghost[1] then
+      if not parent_ghost[1].tags then parent_ghost[1].tags = {} end
+      parent_ghost[1].tags = prebuild_data.bp_rotation --only god knows tbh.
+      game.print(serpent.block(parent_ghost[1].tags))
+    return end
+
+    --If this building was built instantly (like with the editor, then the real thermal itnterface and parent building will already be here.)
+    local interface = surface.find_entity(entity_name.."-thermal-interface",position)
+    if interface then
+      interface.direction = prebuild_data.bp_rotation.direction
+      interface.mirroring = prebuild_data.bp_rotation.mirroring
+    return end
   end
 
   --this should apply to situations where you're pasting over thermal entities.
   local function blueprint_overbuild_handler()
+    --actually, nothing seems to be needed here
 
   end
 
@@ -172,10 +199,12 @@ local BlueprintSetup = bplib.BlueprintSetup
 
     local bp_transforms = {
       bp_rotation = event.direction,
-      horizbp_flip_horizontalontal = event.flip_horizontal,
+      bp_flip_horizontal = event.flip_horizontal,
       bp_flip_vertical = event.flip_vertical,
     }
     --game.print(bp_rotation..tostring(bp_flip_horizontal)..tostring(bp_flip_vertical))
+
+    --actions for every blueprinted entity.
 
     for bp_index, bp_entity in pairs(bp_entities) do
       if blueprint_entity_filter(bp_entity) and bp_entity.tags and bp_entity.tags.TFMG then
@@ -184,26 +213,17 @@ local BlueprintSetup = bplib.BlueprintSetup
       end
     end
 
-  	-- Get entities in the blueprint that (1) match your custom entity and
-  	-- (2) are being placed over existing entities.
-  	local overlap_map = bp_build:map_blueprint_indices_to_overlapping_entities(blueprint_entity_filter)
-  
-  	if not overlap_map or (not next(overlap_map)) then return end
-  	-- Map blueprint tags on to the entities
+    --blueprint overbuild stuff
 
-  	for bp_index, entity in pairs(overlap_map) do
-  		local tags = bp_entities[bp_index].tags or {}
-  		blueprint_overbuild_handler(tags, entity)
-  	end
+    --through some stroke of luck, or whatever, this just, seems to be redundant
+  	--local overlap_map = bp_build:map_blueprint_indices_to_overlapping_entities(blueprint_entity_filter)
+  	--if not overlap_map or (not next(overlap_map)) then return end
+  	---- Map blueprint tags on to the entities
+  	--for bp_index, entity in pairs(overlap_map) do
+  	--	local tags = bp_entities[bp_index].tags or {}
+  	--	blueprint_overbuild_handler(tags, entity)
+  	--end
   end
-
-
-  function TFMG_thermal_compound.post_build(event)
-
-
-  end
-
-
 
 
 

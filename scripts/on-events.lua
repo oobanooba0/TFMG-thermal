@@ -74,7 +74,6 @@
   script.on_event(
     defines.events.on_tick,--"Its HaNlDeR sHoUldNt InCluDe PeRfOrMaNce HeAvY CoDe." You can't tell me what to do.
     function(event)
-      TFMG_thermal_compound.post_build(event)
       TFMG_thermal_core.thermal_update(event)
       TFMG_thermal_gui.on_gui_tick()
     end
