@@ -14,4 +14,3 @@ data.raw.furnace.recycler.TFMG_thermal = {
     --{ position = {-0.5, -1}, direction = 12},
   },
 }
-

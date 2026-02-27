@@ -152,6 +152,19 @@
       TFMG_thermal_compound.bp_setup(event)
     end
   )
+--undo/redo events
+  script.on_event(
+    defines.events.on_undo_applied,
+    function(event)
+      TFMG_thermal_compound.undo_redo_applied(event)
+    end
+  )
+  script.on_event(
+    defines.events.on_redo_applied,
+    function(event)
+      TFMG_thermal_compound.undo_redo_applied(event)
+    end
+  )
 
 --Sketchy Gui related events. Replace these later
 --"RePlaCe ThEsE LaTeR"

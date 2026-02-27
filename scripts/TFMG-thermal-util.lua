@@ -102,11 +102,11 @@ local TFMG_thermal_util = {}
 	  surface = 1,
   }
 
-  function TFMG_thermal_util.subtick_trigger_abuse(data)
+  function TFMG_thermal_util.subtick_trigger_abuse(data)--data should be a table, and contain a data type field, which will be used to identify what its used for.
     local obj = rendering.draw_line(INVISIBLE_LINE)
 	  local rn = script.register_on_object_destroyed(obj)
-    if not storage.prebuild_data then storage.prebuild_data = {} end
-    storage.prebuild_data[rn] = data
+    if not storage.smuggled_data then storage.smuggled_data = {} end
+    storage.smuggled_data[rn] = data
     obj.destroy()
   end
 

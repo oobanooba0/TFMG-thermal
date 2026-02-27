@@ -54,11 +54,20 @@ local TFMG_thermal_compound = {}
   end
 
   function TFMG_thermal_compound.handle_destroy_event(event)
-    local prebuild_data = storage.prebuild_data[event.registration_number]
-    if prebuild_data then
-      TFMG_thermal_compound.apply_smuggled_bp_data(prebuild_data)
-      storage.prebuild_data[event.registration_number] = nil
-    elseif storage.registered_entities then
+    --if our destroy event has a data smuggling entry related to it, then we should do that.
+    --i forsee a potential problem where the event id coincidentally manages to match a unit number, and something wacky happens.
+    local smuggled_data = storage.smuggled_data[event.registration_number]
+    if smuggled_data then
+      if smuggled_data.data_type == "blueprint" then
+        TFMG_thermal_compound.apply_smuggled_bp_data(smuggled_data)
+      elseif smuggled_data.data_type == "undo-stack" then
+        TFMG_thermal_compound.tag_undo(smuggled_data)
+      end
+      --after any event using data smuggling, we should clear the storage. Ideally, nothing remains after the tick is over.
+      storage.smuggled_data[event.registration_number] = nil
+    return end
+    --otherwise, take the compound entity destruction function.
+    if storage.registered_entities then
       TFMG_thermal_compound.destory_compound_entity(event)
     return end
   end
@@ -71,7 +80,7 @@ local TFMG_thermal_compound = {}
   		if v.interface.destroy() == true then
   		  storage.interfaces[machine_name][unit_number] = nil
         storage.registered_entities[unit_number] = nil --Clear the entry, as its irrelevant now
-        --game.print("deconstruction"..unit_number)
+        game.print("deconstruction"..unit_number)
       else
         game.print("destruction failed")
       end
@@ -147,6 +156,7 @@ local TFMG_thermal_compound = {}
 
     TFMG_thermal_util.subtick_trigger_abuse({--we're creating an entity, destorying it and using its destroy event trigger to get some other code to run at the end of the tick.
     --thanks to the lord thy god for that idea. It's brilliant.
+      data_type = "blueprint",
       surface = surface,
       position = bp_location,
       bp_rotation = new_direction,
@@ -156,24 +166,24 @@ local TFMG_thermal_compound = {}
 
   --the subtick_trigger_abuse function leads here. This happens at the end of a tick, after the blueprint or entity has been built.
   --this allows us to actually take all this data we collected in the on prebuild event, and use it *after the entities and ghosts in question have actually been built*
-  function TFMG_thermal_compound.apply_smuggled_bp_data(prebuild_data)
-    --game.print(serpent.block(prebuild_data))
-    local surface = prebuild_data.surface
-    local entity_name = prebuild_data.entity
-    local position = prebuild_data.position
+  function TFMG_thermal_compound.apply_smuggled_bp_data(smuggled_data)
+    --game.print(serpent.block(smuggled_data))
+    local surface = smuggled_data.surface
+    local entity_name = smuggled_data.entity
+    local position = smuggled_data.position
 
     --if this building was blueprinted organically, we should see a ghost of the parent entity here. We're gonna store our rotation information inside the ghosts tags.
     local parent_ghost = surface.find_entities_filtered({position = position, ghost_name = entity_name})
     if parent_ghost[1] then
-      parent_ghost[1].tags = prebuild_data.bp_rotation --only god knows what the fuck this shit is doing. Wheres "TFMG" coming from? Why does it break if nest the table futher. regardless, since i have no bug reports yet, ill just ignore this shit.
+      parent_ghost[1].tags = smuggled_data.bp_rotation --only god knows what the fuck this shit is doing. Wheres "TFMG" coming from? Why does it break if nest the table futher. regardless, since i have no bug reports yet, ill just ignore this shit.
       game.print(serpent.block(parent_ghost[1].tags))
     return end
 
     --If this building was built instantly or was pasted over an existing building, then we expect there to already be an interface, and we can interact with that.
     local interface = surface.find_entity(entity_name.."-thermal-interface",position)
     if interface then
-      interface.direction = prebuild_data.bp_rotation.direction
-      interface.mirroring = prebuild_data.bp_rotation.mirroring
+      interface.direction = smuggled_data.bp_rotation.direction
+      interface.mirroring = smuggled_data.bp_rotation.mirroring
     return end
   end
 
@@ -205,6 +215,8 @@ local TFMG_thermal_compound = {}
       end
     end
 
+    --ill need to handle the undo/redo stack somewhere around here.
+
     --blueprint overbuild stuff
 
     --through some stroke of luck or whatever, it seems I dont have to do anything special to buildings that are getting overplaced. The whole data smuggling trick from earlier actually seems to just, do that for me. nice.
@@ -225,11 +237,73 @@ local TFMG_thermal_compound = {}
     --gather rotation rules
     local rotation_ruleset = prototypes.mod_data["TFMG-thermal-"..event.selected_prototype.name].data.rotation_ruleset_world
     if rotation_ruleset == "_01" then return end --dont rotate if not rotatable.
-
-    --apply rotation, generic method.
+    --smuggle data so we can add it to our undo stack
+    TFMG_thermal_util.subtick_trigger_abuse({
+      data_type = "undo-stack",
+      player_index = event.player_index,
+      modified_interfaces = {
+        {--While nesting like this isnt necessary here, hopefully this means i can use a unified method for when one entity, and many entities all need undos together
+          --normally i'd just put in v.interface, but for whatever reason that doesn't seem to work here. Looks like the data that can be stored in a tag is quite limited.
+          surface_index = v.interface.surface.index,
+          interface_position = v.interface.position,
+          interface_name = v.interface.name,
+          original_direction = v.interface.direction,
+          original_mirroring = v.interface.mirroring,
+        },
+      }
+    })
+    --finally, actually rotate the interface
     TFMG_thermal_util.advanced_rotate(v.interface,transform,rotation_ruleset) --flawed in the sense that non rotatable entities that can become rotatable can be broken.
   end
 
+--undo event tag setup
   --undo key is evil.
+  function TFMG_thermal_compound.tag_undo(smuggled_data) --This function will work, totally.
+    --game.print(serpent.block(smuggled_data))
+    local player = game.players[smuggled_data.player_index]
+    local undo_stack = player.undo_redo_stack
+    --we're tagging the top item and top action of the undo stack. God knows if thats a good idea.
+    undo_stack.set_undo_tag(1,1,"TFMG_thermal",smuggled_data.modified_interfaces)
+  end
+
+--undo/redo events
+
+  function TFMG_thermal_compound.undo_redo_applied(event)
+    if not event.actions[1].tags or not event.actions[1].tags.TFMG_thermal then return end
+    local undo_redo_data = event.actions[1].tags.TFMG_thermal
+    --we'll need to prep the reverse event also.
+    local player = game.players[event.player_index]
+    local undo_redo_stack = player.undo_redo_stack
+    local revert_data = {}
+    --for each individual item stored in the tag we should do stuff
+    for _,interface_data in pairs(undo_redo_data) do
+      local surface_index = interface_data.surface_index
+      local surface = game.surfaces[surface_index]
+      local interface_name = interface_data.interface_name
+      local interface_position = interface_data.interface_position
+      local interface = surface.find_entity(interface_name,interface_position)
+      if interface and interface.valid then
+        --add the appropriate information into the revert data (basically, if we're undoing, this goes into the redo, and if we're redoing, we're putting this into the redo)
+        table.insert(revert_data,{
+          surface_index = surface_index,
+          interface_position = interface_position,
+          interface_name = interface_name,
+          original_direction = interface.direction,
+          original_mirroring = interface.mirroring,
+        })
+        --actually reorient the thingymajig
+        interface.direction = interface_data.original_direction
+        interface.mirroring = interface_data.original_mirroring
+      end
+    end
+    --now place the revert data into the correct tags based on weather we just undid, or redid our action
+    if event.name == defines.events.on_undo_applied then
+      undo_redo_stack.set_redo_tag(1,1,"TFMG_thermal",revert_data)
+    else
+      undo_redo_stack.set_undo_tag(1,1,"TFMG_thermal",revert_data)
+    end
+  end
+
+
 
 return TFMG_thermal_compound
