@@ -105,17 +105,17 @@ local TFMG_thermal_util = {}
 
   function TFMG_thermal_util.subtick_trigger_abuse(data)--data should be a table, and contain a data type field, which will be used to identify what its used for.
     local obj = rendering.draw_line(INVISIBLE_LINE)
-    local fish = game.surfaces[1].create_entity({
-      name = "fish",
-      position = {0,0},
-      player = (data.player_index or 1),
-      undo_index = 0,
-    })
-    game.print(serpent.block(game.players[1].undo_redo_stack.get_undo_item(1)))
+    --local fish = game.surfaces[1].create_entity({
+    --  name = "fish",
+    --  position = {0,0},
+    --  player = (data.player_index or 1),
+    --  undo_index = 0,
+    --})
+    --game.print(serpent.block(game.players[1].undo_redo_stack.get_undo_item(1)))
 
     --heres the issue, i can create the undo action, but if i destroy the fish, the undo action goes with it.
     --fuck me am i right.
-    
+
 	  local rn = script.register_on_object_destroyed(obj)
     if not storage.smuggled_data then storage.smuggled_data = {} end
     storage.smuggled_data[rn] = data
