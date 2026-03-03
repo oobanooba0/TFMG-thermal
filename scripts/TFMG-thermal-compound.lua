@@ -162,7 +162,19 @@ local TFMG_thermal_compound = {}
       bp_rotation = new_direction,
       entity = entity_name,
     })
-  end
+
+    --we're gonna return information about any interface that may be modified so we can tag the undo/redo stack with it.
+    local interface = surface.find_entity(entity_name.."-thermal-interface",bp_location)
+    if not interface then return nil end
+
+    local modified_interface = {
+      surface_index = surface.index,
+      interface_position = interface.position,
+      interface_name = interface.name,
+      original_direction = interface.direction,
+      original_mirroring = interface.mirroring,
+    }
+  return modified_interface end
 
   --the subtick_trigger_abuse function leads here. This happens at the end of a tick, after the blueprint or entity has been built.
   --this allows us to actually take all this data we collected in the on prebuild event, and use it *after the entities and ghosts in question have actually been built*
@@ -208,12 +220,24 @@ local TFMG_thermal_compound = {}
 
     --actions for every blueprinted entity.
 
+    local modified_interfaces = {}
+
     for bp_index, bp_entity in pairs(bp_entities) do
       if blueprint_entity_filter(bp_entity) and bp_entity.tags and bp_entity.tags.TFMG then
         local bp_location = bp_locations[bp_index]
-        blueprint_place_tag_handler(bp_entity,bp_transforms,bp_location,bp_build.surface)
+        local modified_interface = blueprint_place_tag_handler(bp_entity,bp_transforms,bp_location,bp_build.surface)
+        --game.print(serpent.block(modified_interface))
+        table.insert(modified_interfaces,modified_interface)
       end
     end
+
+    if not modified_interfaces[1] then return end
+
+    TFMG_thermal_util.subtick_trigger_abuse({
+      data_type = "undo-stack",
+      player_index = event.player_index,
+      modified_interfaces = modified_interfaces,
+    })
 
     --ill need to handle the undo/redo stack somewhere around here.
 
@@ -259,11 +283,11 @@ local TFMG_thermal_compound = {}
 --undo event tag setup
   --undo key is evil.
   function TFMG_thermal_compound.tag_undo(smuggled_data) --This function will work, totally.
-    --game.print(serpent.block(smuggled_data))
     local player = game.players[smuggled_data.player_index]
     local undo_stack = player.undo_redo_stack
     --we're tagging the top item and top action of the undo stack. God knows if thats a good idea.
     undo_stack.set_undo_tag(1,1,"TFMG_thermal",smuggled_data.modified_interfaces)
+    --game.print(serpent.block(undo_stack.get_undo_item(1)))
   end
 
 --undo/redo events
@@ -303,7 +327,5 @@ local TFMG_thermal_compound = {}
       undo_redo_stack.set_undo_tag(1,1,"TFMG_thermal",revert_data)
     end
   end
-
-
 
 return TFMG_thermal_compound
