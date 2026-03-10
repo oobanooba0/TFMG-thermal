@@ -122,4 +122,14 @@ local TFMG_thermal_util = {}
     obj.destroy()
   end
 
+  function TFMG_thermal_util.generate_undo_item(player)--generates a new undo item, for when we need one
+    local surface = player.surface
+    local undo_proxy = surface.find_entity("TFMG-thermal-undo-redo-proxy",{0,0})
+    if not undo_proxy then
+      undo_proxy = surface.create_entity({name = "TFMG-thermal-undo-redo-proxy",position = {0,0},force = "player"})
+    end
+    undo_proxy.rotate({by_player = player})
+    --game.print(serpent.block(game.players[1].undo_redo_stack.get_undo_item(1)))
+  end
+
 return TFMG_thermal_util

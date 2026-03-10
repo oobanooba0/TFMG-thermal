@@ -28,23 +28,14 @@
   end
 
   local function setup_storage_tables()--this handles the creation of storage tables, but pays no mind to existing storage tables that must no longer exist. Deal with later.
-    if storage.interfaces == nil then
-      storage.interfaces = {}
-    end
-    if storage.table_index == nil then
-      storage.table_index = {}
-    end
-    if storage.players == nil then
-      storage.players = {}
-    end
-    if storage.registered_entities == nil then
-      storage.registered_entities = {}
-    end
+    if storage.interfaces == nil then storage.interfaces = {} end
+    if storage.table_index == nil then storage.table_index = {} end
+    if storage.players == nil then storage.players = {} end
+    if storage.registered_entities == nil then storage.registered_entities = {} end
     if not storage.prebuild_data then storage.prebuild_data = {} end
-    if storage.tfmg_job_list == nil then
-      storage.tfmg_job_list = {}
-    end
-    for name , machine in pairs(prototypes.mod_data) do--build the sub tables for each machine if they dont already exist. so we can guarantee they exist before any entities have been built.
+    if not storage.smuggled_data then storage.smuggled_data = {} end
+    --build the sub tables for each machine if they dont already exist. so we can guarantee they exist before any entities have been built.
+    for name , machine in pairs(prototypes.mod_data) do
       if machine.data_type == "TFMG-thermal.thermal-interface" then
         if storage.interfaces[machine.data.name] == nil then
           storage.interfaces[machine.data.name] = {}

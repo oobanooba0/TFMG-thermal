@@ -84,7 +84,7 @@ local TFMG_thermal_compound = {}
       else
         game.print("destruction failed")
       end
-    else game.print("no storage entry here")
+    --else game.print("no storage entry here")
     end
   end
 
@@ -171,6 +171,7 @@ local TFMG_thermal_compound = {}
       surface_index = surface.index,
       interface_position = interface.position,
       interface_name = interface.name,
+      parent_name = entity_name,
       original_direction = interface.direction,
       original_mirroring = interface.mirroring,
     }
@@ -256,7 +257,9 @@ local TFMG_thermal_compound = {}
 --direct rotation handlers
   function TFMG_thermal_compound.handle_transform(event,transform) --note that the input event occurs before the game actually does anything.
     local v = TFMG_thermal_util.get_entry_from_input_event(event)
-    if not v then game.print("no interface entry found from input event") return end
+    if not v then
+      --game.print("no interface entry found from input event")
+    return end
 
     --gather rotation rules
     local rotation_ruleset = prototypes.mod_data["TFMG-thermal-"..event.selected_prototype.name].data.rotation_ruleset_world
@@ -271,6 +274,7 @@ local TFMG_thermal_compound = {}
           surface_index = v.interface.surface.index,
           interface_position = v.interface.position,
           interface_name = v.interface.name,
+          parent_name = v.machine.name,
           original_direction = v.interface.direction,
           original_mirroring = v.interface.mirroring,
         },
@@ -286,6 +290,20 @@ local TFMG_thermal_compound = {}
     local player = game.players[smuggled_data.player_index]
     local undo_stack = player.undo_redo_stack
     --we're tagging the top item and top action of the undo stack. God knows if thats a good idea.
+
+    local undo_needed = true
+
+    --This method generates undo entries correctly sometimes. I need a better, more reliable method.
+
+    for _,interface in pairs(smuggled_data.modified_interfaces) do
+      if prototypes.entity[interface.parent_name].supports_direction then undo_needed = false break end
+    end
+
+    game.print(serpent.block(undo_stack.get_undo_item(1)))
+
+
+    if undo_needed then TFMG_thermal_util.generate_undo_item(player) game.print("undo created") end
+
     undo_stack.set_undo_tag(1,1,"TFMG_thermal",smuggled_data.modified_interfaces)
     --game.print(serpent.block(undo_stack.get_undo_item(1)))
   end
