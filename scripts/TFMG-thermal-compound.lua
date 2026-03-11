@@ -290,11 +290,9 @@ local TFMG_thermal_compound = {}
     local player = game.players[smuggled_data.player_index]
     local undo_stack = player.undo_redo_stack
     --we're tagging the top item and top action of the undo stack. God knows if thats a good idea.
-
     local undo_needed = true
 
     --This method generates undo entries correctly sometimes. I need a better, more reliable method.
-
     for _,interface in pairs(smuggled_data.modified_interfaces) do
       if prototypes.entity[interface.parent_name].supports_direction then undo_needed = false break end
     end

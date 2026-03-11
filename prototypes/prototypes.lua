@@ -28,10 +28,10 @@ data:extend({
     name = "TFMG-thermal-undo-redo-proxy",
     icon = "__base__/graphics/icons/signal/signal-fire.png",
     --picture makes this visible for debug purposes.
-    picture = {
-      filename = "__base__/graphics/icons/signal/signal-fire.png",
-      size = 64,
-    },
+    --picture = {
+    --  filename = "__base__/graphics/icons/signal/signal-fire.png",
+    --  size = 64,
+    --},
     --minable = {mining_time = 0},
     collision_mask = {layers = {}},
     flags = {"placeable-off-grid"},
