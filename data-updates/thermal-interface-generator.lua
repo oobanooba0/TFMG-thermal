@@ -28,48 +28,37 @@ end
 
 
 --Heat interface connection graphic definitions
-  local disconnected_shift = 0.3
-  local connector_graphics = {--improved connector graphics, so things should be a little easier to work with.
-    disconnected = {
-      north = {size = 64, filename = "__base__/graphics/entity/heat-pipe/heat-pipe-ending-down-1.png", scale = 0.5,shift = {0,disconnected_shift}},
-      east = {size = 64, filename = "__base__/graphics/entity/heat-pipe/heat-pipe-ending-left-1.png", scale = 0.5,shift = {-disconnected_shift,0}},
-      south = {size = 64, filename = "__base__/graphics/entity/heat-pipe/heat-pipe-ending-up-1.png", scale = 0.5,shift = {0,-disconnected_shift}},
-      west = {size = 64, filename = "__base__/graphics/entity/heat-pipe/heat-pipe-ending-right-1.png", scale = 0.5,shift = {disconnected_shift,0}},
+  local disconnected_shift = 0.4
+  local connected_shift = 1
+  local connector_graphics = {
+    ["vanilla"] = {--vanilla style, using vanilla textures. The default set
+      disconnected = {
+        north = {size = 64, filename = "__base__/graphics/entity/heat-pipe/heat-pipe-ending-down-1.png", scale = 0.5, shift = {0,disconnected_shift}},
+        east = {size = 64, filename = "__base__/graphics/entity/heat-pipe/heat-pipe-ending-left-1.png", scale = 0.5, shift = {-disconnected_shift,0}},
+        south = {size = 64, filename = "__base__/graphics/entity/heat-pipe/heat-pipe-ending-up-1.png", scale = 0.5, shift = {0,-disconnected_shift}},
+        west = {size = 64, filename = "__base__/graphics/entity/heat-pipe/heat-pipe-ending-right-1.png", scale = 0.5, shift = {disconnected_shift,0}},
+      },
+      disconnected_glow = {
+        north = {size = 64, filename = "__base__/graphics/entity/heat-pipe/heated-ending-down-1.png", scale = 0.5, shift = {0,disconnected_shift}},
+        east = {size = 64, filename = "__base__/graphics/entity/heat-pipe/heated-ending-left-1.png", scale = 0.5, shift = {-disconnected_shift,0}},
+        south = {size = 64, filename = "__base__/graphics/entity/heat-pipe/heated-ending-up-1.png", scale = 0.5, shift = {0,-disconnected_shift}},
+        west = {size = 64, filename = "__base__/graphics/entity/heat-pipe/heated-ending-right-1.png", scale = 0.5, shift = {disconnected_shift,0}},
+      },
+      connected = {--connected
+        north = {size = 64, filename = "__base__/graphics/entity/heat-pipe/heat-pipe-straight-vertical-1.png", scale = 0.5, shift = {0,connected_shift}},
+        east = {size = 64, filename = "__base__/graphics/entity/heat-pipe/heat-pipe-straight-horizontal-1.png", scale = 0.5, shift = {-connected_shift,0}},
+        south = {size = 64, filename = "__base__/graphics/entity/heat-pipe/heat-pipe-straight-vertical-1.png", scale = 0.5, shift = {0,-connected_shift}},
+        west = {size = 64, filename = "__base__/graphics/entity/heat-pipe/heat-pipe-straight-horizontal-1.png", scale = 0.5, shift = {connected_shift,0}},
+      },
+      connected_glow = {
+        north = {size = 64, filename = "__base__/graphics/entity/heat-pipe/heated-straight-vertical-1.png", scale = 0.5, shift = {0,connected_shift}},
+        east = {size = 64, filename = "__base__/graphics/entity/heat-pipe/heated-straight-horizontal-1.png", scale = 0.5, shift = {-connected_shift,0}},
+        south = {size = 64, filename = "__base__/graphics/entity/heat-pipe/heated-straight-vertical-1.png", scale = 0.5, shift = {0,-connected_shift}},
+        west = {size = 64, filename = "__base__/graphics/entity/heat-pipe/heated-straight-horizontal-1.png", scale = 0.5, shift = {connected_shift,0}},
+      }
     },
-    disconnected_glow = {
-      north = {size = 64, filename = "__base__/graphics/entity/heat-pipe/heated-ending-down-1.png", scale = 0.5,shift = {0,disconnected_shift}},
-      east = {size = 64, filename = "__base__/graphics/entity/heat-pipe/heated-ending-left-1.png", scale = 0.5,shift = {-disconnected_shift,0}},
-      south = {size = 64, filename = "__base__/graphics/entity/heat-pipe/heated-ending-up-1.png", scale = 0.5,shift = {0,-disconnected_shift}},
-      west = {size = 64, filename = "__base__/graphics/entity/heat-pipe/heated-ending-right-1.png", scale = 0.5,shift = {disconnected_shift,0}},
-    },
   }
 
-
-  local heat_pipe_connected = {--connected
-    {size = 64, filename = "__base__/graphics/entity/heat-pipe/heat-pipe-straight-vertical-1.png", scale = 0.5},
-    {size = 64, filename = "__base__/graphics/entity/heat-pipe/heat-pipe-straight-horizontal-1.png", scale = 0.5},
-    {size = 64, filename = "__base__/graphics/entity/heat-pipe/heat-pipe-straight-vertical-1.png", scale = 0.5},
-    {size = 64, filename = "__base__/graphics/entity/heat-pipe/heat-pipe-straight-horizontal-1.png", scale = 0.5},
-  }
-    local heat_pipe_glow_connected = {--connected hot
-    {size = 64, filename = "__base__/graphics/entity/heat-pipe/heated-straight-vertical-1.png", scale = 0.5},
-    {size = 64, filename = "__base__/graphics/entity/heat-pipe/heated-straight-horizontal-1.png", scale = 0.5},
-    {size = 64, filename = "__base__/graphics/entity/heat-pipe/heated-straight-vertical-1.png", scale = 0.5},
-    {size = 64, filename = "__base__/graphics/entity/heat-pipe/heated-straight-horizontal-1.png", scale = 0.5},
-  }
-
-  local heat_pipe_disconnected = {--disconnected
-    {size = 64, filename = "__base__/graphics/entity/heat-pipe/heat-pipe-ending-down-1.png", scale = 0.5,shift = {0,0.3}},
-    {size = 64, filename = "__base__/graphics/entity/heat-pipe/heat-pipe-ending-left-1.png", scale = 0.5,shift = {-0.3,0}},
-    {size = 64, filename = "__base__/graphics/entity/heat-pipe/heat-pipe-ending-up-1.png", scale = 0.5,shift = {0,-0.3}},
-    {size = 64, filename = "__base__/graphics/entity/heat-pipe/heat-pipe-ending-right-1.png", scale = 0.5,shift = {0.3,0}},
-  }
-  local heat_pipe_glow_disconnected = {--disconnected hot
-    {size = 64, filename = "__base__/graphics/entity/heat-pipe/heated-ending-down-1.png", scale = 0.5,shift = {0,0.3}},
-    {size = 64, filename = "__base__/graphics/entity/heat-pipe/heated-ending-left-1.png", scale = 0.5,shift = {-0.3,0}},
-    {size = 64, filename = "__base__/graphics/entity/heat-pipe/heated-ending-up-1.png", scale = 0.5,shift = {0,-0.3}},
-    {size = 64, filename = "__base__/graphics/entity/heat-pipe/heated-ending-right-1.png", scale = 0.5,shift = {0.3,0}},
-  }
 --icon graphic generation
   local function generate_thermal_interface_icons(machine) --handles the creation of an entity icon for the editor gui.
   local icons = {{--this is icon we're gonna use as a base.
@@ -93,59 +82,6 @@ end
 
   local function semiceil(number)
   return math.ceil(number*2)/2 end--Round up number to the nearest 0.5
-
-  local function rotate(coordinate)--rotate a pair of coordinates 90 degrees around 0,0
-    local rotated_coordinate = {-coordinate[2],coordinate[1]}
-  return rotated_coordinate end
-
-  local function mirror(coordinate)--flip a pair of coordinates along the x axis
-    local mirrored_coordinate = {-coordinate[1],coordinate[2]}
-  return mirrored_coordinate end
-
-  local function rotate_connection(connection) --rotate a connection 90 degrees
-    local coordinate = connection.position
-    local rotated_coordinate = rotate(coordinate)
-    local direction = connection.direction + 4
-    if direction >= 16 then direction = direction - 16 end
-    local rotated_connection = { position = rotated_coordinate, direction = direction}
-  return rotated_connection end
-
-  local function mirror_connection(connection) --Mirror a connection horizontally
-    local coordinate = connection.position
-    local mirrored_coordinate = mirror(coordinate)
-    local direction = connection.direction
-    if direction == 4 then direction = 12--we only need to flip the west and east connections, north and south stay the same
-    elseif direction == 12 then direction = 4 end
-    local mirrored_connection = { position = mirrored_coordinate, direction = direction}
-  return mirrored_connection end
-
-  local function rotate_connections(connections)--rotate a set of connections
-    local rotated_connections = {}
-    for name, connection in pairs(connections) do
-      table.insert(rotated_connections, rotate_connection(connection))
-    end
-  return rotated_connections end
-
-  local function mirror_connections(connections)--mirror a set of connections along the X axis
-    local mirrored_connections = {}
-    for name, connection in pairs(connections) do
-      table.insert(mirrored_connections, mirror_connection(connection))
-    end
-  return mirrored_connections end
-
-  local function rotate_collision_box(collision_box)--my mind is a machine that turns
-    local rotated_collision_box = {
-     {-collision_box[2][2],collision_box[1][1]},
-     {-collision_box[1][2],collision_box[2][1]},
-    }
-  return rotated_collision_box end
-
-  local function mirror_collision_box(collision_box)--this theoretically, shouldnt do anything, but you never know when you need to account for someones off center building.
-    local rotated_collision_box = {
-     {-collision_box[2][1],collision_box[1][2]},
-     {-collision_box[1][1],collision_box[2][2]},
-    }
-  return rotated_collision_box end
 
   local function is_square(coordinate_pair)--checks if a pair of coordinates are square
     if coordinate_pair[2][1]-coordinate_pair[1][1] == coordinate_pair[2][2]-coordinate_pair[1][2] then return true end
@@ -185,50 +121,6 @@ end
     else connections = machine.TFMG_thermal.connections end --Else use the connection set defined in the entity prototype.
   return connections end
 
-  local function generate_thermal_interface_connections_thruster(machine)
-    if not machine.TFMG_thermal.connections then -- if no connections are defined, we shall generate one automagically
-      --We're gonna find the coordinates of the center of the x most, and y most tiles of the collision box.
-      local machine_box = machine.collision_box
-      local x_max = semifloor(machine_box[2][1])
-      local x_min = semiceil(machine_box[1][1])
-      local y_min = semiceil(machine_box[1][2])
-
-      --basically the same process as generating for normal machines, but we only bother with the top connections.
-
-      connections = {
-        { position = {x_min, y_min}, direction = 0 },
-      }
-      if x_max - x_min > 0 then--if our north and south side length is large enough then we add our second corner connetions.
-      table.insert(connections,{ position = {x_max, y_min}, direction = 0 })
-      end
-
-    else connections = machine.TFMG_thermal.connections end --Else use the connection set defined in the entity prototype.
-  return connections end
-
-  local function generate_thermal_interface_connection_set(machine)--generate all 8 rotations and mirrorings of the connection by generating a north facing connection set, and then flipping and rotating.
-    local connections = generate_thermal_interface_connections(machine)--generate north connection set
-    local connection_set = {}
-    for i = 1, 2 do--mirror
-      for i = 1, 4 do --speeeen
-        table.insert(connection_set, connections) --get our connection set, and add it to the table
-        connections = rotate_connections(connections) --rotate the set.
-      end
-    connections = mirror_connections(connections)--do a flip
-    end
-  return connection_set end
-
-  local function generate_thermal_interface_collision_box_set(machine)--correct collision boxes are required for the heat interfaces to be placed in the right spots
-    local collision_box_set = {}
-    local collision_box = machine.collision_box
-    for i = 1, 2 do 
-      for i = 1, 4 do --speeeen
-        table.insert(collision_box_set, collision_box) -- start by getting the north set and putting it in our table on index 1
-        collision_box = rotate_collision_box(collision_box)
-      end
-      mirror_collision_box(collision_box)
-    end
-  return collision_box_set end
-
   local function calculate_machine_footprint(machine)--calculate the number of tiles a machine takes up.
     local machine_box = machine.collision_box or machine.selection_box
     if not machine_box then log_thermal_interface_error("attempted to generate thermal interface for machine that doesn't have a collision box, nor a selection box. machines like this probably shouldn't have thermal interfaces. Check"..machine.name) end
@@ -240,25 +132,6 @@ end
 
     local area = (x_max-x_min)*(y_max-y_min)
   return area end
-
-  --Because neither you, nor I want to do this every time.
-
-  local function generate_heat_patches_from_connections (connections,interface)--uses the set of heat 
-    local interface = interface --I gotta check if this was important or whatever.
-    --setting up the connection patch tables.
-    interface.connection_patches_connected = {}
-    interface.connection_patches_disconnected = {}
-    interface.heat_connection_patches_connected = {}
-    interface.heat_connection_patches_disconnected = {}
-
-    for _, connection in pairs(connections) do
-      local direction = connection.direction/4+1--this is goofy, but it works. basically we're just converting direction 0,4,8,12 into 1,2,3,4 which corresponds to an index within a predefined table of heat pipe textures, and we slam that into a new table of connection patches.
-      table.insert(interface.connection_patches_connected, heat_pipe_connected[direction])
-      table.insert(interface.connection_patches_disconnected, heat_pipe_disconnected[direction])
-      table.insert(interface.heat_connection_patches_connected, heat_pipe_glow_connected[direction])
-      table.insert(interface.heat_connection_patches_disconnected, heat_pipe_glow_disconnected[direction])
-    end
-  return interface end
 
   local function surface_condition_compare(surface,conditions)--this function fucks.
   if not conditions then return true end -- if we dont have any surface conditions, we already know it will pass
@@ -332,12 +205,38 @@ end
     end
   return specific_heat end
 
+  local function generate_fluidboxes(connections,style)
+    local fb_connections = {}
+    for _,connection in pairs(connections) do
+      local fb_connection = {
+        direction = connection.direction,
+        position = connection.position,
+        connection_type = "underground",
+        connection_category = "ignore-all",
+        max_underground_distance = 0,
+      }
+      table.insert(fb_connections,fb_connection)
+    end
+    local fluidboxes = {{
+      pipe_connections = fb_connections,
+      pipe_picture = connector_graphics[style].connected,
+      volume = 1,
+      production_type = "input",
+      hide_connection_info = true,
+      render_layer = "lower-object-above-shadow",
+    }}
+  return fluidboxes end
+
 --generate a thermal interfaces, and add it to data.raw
   --basic thermal interface.
 
   local function generate_thermal_interface(machine)
-    if not machine.TFMG_thermal then return end -- Check if machine is opted into the thermal system. 
+    if not machine.TFMG_thermal then return end -- Check if machine is opted into the thermal system.
+    local style = machine.TFMG_thermal.graphics_set or "vanilla"
+    if not connector_graphics[style] then log_thermal_interface_error("graphics style "..style.." does not exist.") end
     local specific_heat = calculate_specific_heat(machine)
+    local connections = generate_thermal_interface_connections(machine)
+    local fluidboxes = generate_fluidboxes(connections,style)
 
     ---double check if any of this code actually matters
     local surface_conditions = nil
@@ -370,12 +269,13 @@ end
         minimum_glow_temperature = 350,
         specific_heat = specific_heat.."J",
         max_transfer = "100TW",--Ultimately, this will be limited more by connections than anything else.
-        connections = generate_thermal_interface_connections(machine), --we shall connect the world
-        pipe_covers = connector_graphics.disconnected,
-        heat_pipe_covers = connector_graphics.disconnected_glow,
+        connections = connections, --we shall connect the world
+        pipe_covers = connector_graphics[style].disconnected,
+        heat_pipe_covers = connector_graphics[style].disconnected_glow,
       },
+      fluid_boxes = fluidboxes,
+      fluid_boxes_off_when_no_fluid_recipe = false,
     }
-    --generate_heat_patches_from_connections(interface.energy_souce.connections,interface)
     --We're looking at an entirely new setup to generate the heat connections with the correct setup
     if feature_flags["space_travel"] then interface.surface_conditions = surface_conditions end
     data:extend({interface})
@@ -443,10 +343,11 @@ end
 
 --generate thermal interfaces for thrusters. They cannot be rotated and lack many properties that crafting machines do.
   local function generate_thermal_interface_thruster(machine)
-    if not machine.TFMG_thermal then return end -- Check if machine is opted into the thermal system. 
+    if not machine.TFMG_thermal then return end -- Check if machine is opted into the thermal system.
+    local style = machine.TFMG_thermal.style or "vanilla"
     local specific_heat = calculate_specific_heat(machine)
-    local connections = generate_thermal_interface_connections_thruster(machine)
-    local collision_box = machine.collision_box
+    local connections = generate_thermal_interface_connections(machine)
+    local fluidboxes = generate_fluidboxes(connections,style)
     machine.TFMG_thermal.surface_conditions = surface_conditions --what does this do?
 
     local interface = {--machine interface template
@@ -474,10 +375,12 @@ end
         minimum_glow_temperature = 350,
         specific_heat = specific_heat.."J",
         max_transfer = "100TW",--Ultimately, this will be limited more by connections than anything else.
-        connections = generate_thermal_interface_connections(machine), --we shall connect the world
-        pipe_covers = connector_graphics.disconnected,
-        heat_pipe_covers = connector_graphics.disconnected_glow,
+        connections = connections, --we shall connect the world
+        pipe_covers = connector_graphics[style].disconnected,
+        heat_pipe_covers = connector_graphics[style].disconnected_glow,
       },
+      fluid_boxes = fluidboxes,
+      fluid_boxes_off_when_no_fluid_recipe = false,
     }
     data:extend({interface})
     

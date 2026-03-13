@@ -9,7 +9,7 @@ TFMG_thermal = {}
 --The thermal system will automatically generate the heat pipe connections, compound entites, and default properties of the system, no futher input is required.
 
 
---the complete TFMG_thermal prototype looks like this
+--the complete TFMG_thermal prototype looks like this:
 
 TFMG_thermal = {
   --Surface conditions operate just like surface conditions do for any other entity. If the surface conditions are met when the parent prototype is placed, the thermal system will apply
@@ -32,6 +32,11 @@ TFMG_thermal = {
     { position = {x, y}, direction = defines.direction.south },
     { position = {x, y}, direction = defines.direction.west },
   },
+
+  --graphics_set determines what graphics the interfaces connectors should use.
+  --currently the only option is "vanilla" which uses the vanilla asthetic.
+  graphics_set = "vanilla",
+
   --the heat ratio controls how much heat energy the building will produce. a value of 1 means 100% of the energy the machine uses is converted to heat. (While heat ratios of greater than 1 are accepted, be aware this leads to infinite energy loops)
   --Because heat energy produced is a function of the machines energy consumption. Machines that consume more energy, will also proportionately, produce more heat.
   --Idle energy consumption is *not* considered when calculating heat production. Modifiers from modules are considered.
@@ -74,6 +79,11 @@ TFMG_thermal = {
     { position = {x, y}, direction = defines.direction.south },--south connection is nonsense, but go for it i guess.
     { position = {x, y}, direction = defines.direction.west },
   },
+
+  --style determines what graphics the interfaces connectors should use.
+  --currently the only option is "vanilla" which uses the vanilla asthetic.
+  graphics_set = "vanilla",
+
   --default is 750
   max_working_temperature = number,
   --default is 850
