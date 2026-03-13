@@ -333,6 +333,7 @@ end
   return specific_heat end
 
 --generate a thermal interfaces, and add it to data.raw
+  --basic thermal interface.
 
   local function generate_thermal_interface(machine)
     if not machine.TFMG_thermal then return end -- Check if machine is opted into the thermal system. 
@@ -343,6 +344,7 @@ end
     if feature_flags["space_travel"] then--only if we have space age features enabled can we use surface conditions. Surface conditions are stored in the interface prototype, dispite this actually not having any direct effect. Surface conditions dont affect entities placed by script.
       surface_conditions = build_and_check_surface_conditions(machine)
     end
+
     machine.TFMG_thermal.surface_conditions = surface_conditions
     local interface = {--machine interface template
       type = "assembling-machine",
@@ -356,7 +358,7 @@ end
       selection_box = machine.collision_box,
       --resistances  = resistances,
       selection_priority = 40,
-      selectable_in_game = true,
+      selectable_in_game = false,
       allow_copy_paste = false,
       hidden = true,
       crafting_speed = 1,
@@ -389,8 +391,7 @@ end
 
     local rotation_ruleset, rotation_ruleset_world = set_rotation_rules(machine) --rotation rulesets and such might have changed just now
     local script_type = "crafting-machine"
-    local heat_when_disabled = false
-    if machine.TFMG_thermal.heat_when_disabled_by_script then heat_when_disabled = true end
+    local heat_when_disabled = machine.TFMG_thermal.heat_when_disabled_by_script
 
     local machine_data = {--this information we take into runtime, since we need it for scripts or for gui.
       type = "mod-data",
@@ -446,35 +447,38 @@ end
     local specific_heat = calculate_specific_heat(machine)
     local connections = generate_thermal_interface_connections_thruster(machine)
     local collision_box = machine.collision_box
-    machine.TFMG_thermal.surface_conditions = surface_conditions
+    machine.TFMG_thermal.surface_conditions = surface_conditions --what does this do?
+
     local interface = {--machine interface template
-      type = "reactor",
-      name = machine.name .. "-thermal-interface".."1",
+      type = "assembling-machine",
+      name = machine.name .. "-thermal-interface",
       localised_name = {"entity-name.thermal-interface", machine.localised_name or {"entity-name."..machine.name}},
       order = "y"..machine.type,
       icons = generate_thermal_interface_icons(machine),
       flags = {"placeable-neutral", "player-creation","not-on-map","not-blueprintable","not-deconstructable","no-automated-item-insertion","no-automated-item-removal"},
       collision_mask = {layers ={}}, --the interface does not concern itself with the plight of lesser entities.
-      collision_box = collision_box,
-      resistances  = resistances,
+      collision_box = machine.collision_box,
       selection_box = {{-1,-1},{1,1}},
+      --resistances  = resistances,
       selection_priority = 250,
       selectable_in_game = false,
       allow_copy_paste = false,
       hidden = true,
+      crafting_speed = 1,
+      crafting_categories = {"nothing"},
       consumption = "1W", -- this is actually irrelevant, but its required by the reactor prototype.
-      energy_source = { --also irrelevant, since interfaces are disabled by script at birth, but wube demands it.
-        type = "void",
-      },
-      heat_buffer = {
+      energy_usage = "1W",
+      energy_source = {
+        type = "heat",
         max_temperature = 1000,--These two values just match heat pipes, and should be fine in pretty much all sane use cases.
         minimum_glow_temperature = 350,
         specific_heat = specific_heat.."J",
         max_transfer = "100TW",--Ultimately, this will be limited more by connections than anything else.
-        connections = connections--we shall connect the world.
+        connections = generate_thermal_interface_connections(machine), --we shall connect the world
+        pipe_covers = connector_graphics.disconnected,
+        heat_pipe_covers = connector_graphics.disconnected_glow,
       },
     }
-    generate_heat_patches_from_connections(interface.heat_buffer.connections,interface)
     data:extend({interface})
     
     --gather information we will put into a mod data table to recall during runtime.
@@ -483,13 +487,6 @@ end
     local heat_per_unit_fluid = util.parse_energy(machine.TFMG_thermal.heat_per_unit_fluid or "100kJ")
     local temperature_increase_per_unit_fuel = (heat_per_unit_fluid/specific_heat)*2
     local default_temperature = 15
-    --if max_working_temperature >= max_safe_temperature then
-    --  default_temperature = max_safe_temperature - 10
-    --else
-    --  default_temperature = max_working_temperature - 10
-    --end
-
-    local rotation_ruleset, rotation_ruleset_world = set_rotation_rules(machine)
 
     local machine_data = {--this information we take into runtime, since we need it for scripts or for gui.
       type = "mod-data",
@@ -497,14 +494,14 @@ end
       name = "TFMG-thermal-"..machine.name,
       data = {
         name = machine.name,
-        type = "thruster",
+        type = "thruster", --thrusters always use the thruster script type.
         max_working_temperature = max_working_temperature,
         max_safe_temperature = max_safe_temperature,
         temperature_increase_per_unit_fuel = temperature_increase_per_unit_fuel,
         default_temperature = machine.TFMG_thermal.default_temperature or default_temperature,
         rotation_ruleset = "_01",
         rotation_ruleset_world = "_01",
-        surface_conditions = nil, --thrusters can only built on platforms, surface conditions are never relevant.
+        surface_conditions = nil, --thrusters can only built on platforms which all have identical surface conditions, hence theyll always or never have interfaces. Surface conditions are never needed.
         specific_heat = (specific_heat/1000000).."MJ",
         min_consumption = machine.min_performance.fluid_usage,--per tick
         max_consumption = machine.max_performance.fluid_usage,
