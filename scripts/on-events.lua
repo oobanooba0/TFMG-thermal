@@ -28,18 +28,19 @@
   end
 
   local function setup_storage_tables()--this handles the creation of storage tables, but pays no mind to existing storage tables that must no longer exist. Deal with later.
-    if storage.interfaces == nil then storage.interfaces = {} end
-    if storage.table_index == nil then storage.table_index = {} end
-    if storage.players == nil then storage.players = {} end
-    if storage.registered_entities == nil then storage.registered_entities = {} end
+    if not storage.interfaces then storage.interfaces = {} end
+    if not storage.table_index then storage.table_index = {} end
+    if not storage.player_storage then storage.players = {} end
+    if not storage.registered_entities then storage.registered_entities = {} end
     if not storage.prebuild_data then storage.prebuild_data = {} end
     if not storage.smuggled_data then storage.smuggled_data = {} end
     --build the sub tables for each machine if they dont already exist. so we can guarantee they exist before any entities have been built.
-    for name , machine in pairs(prototypes.mod_data) do
+    for _ , machine in pairs(prototypes.mod_data) do
       if machine.data_type == "TFMG-thermal.thermal-interface" then
         if storage.interfaces[machine.data.name] == nil then
           storage.interfaces[machine.data.name] = {}
         end
+        --table index is used by flib to know where it is when iterating the main tables.
         if storage.table_index[machine.data.name] == nil then
           storage.table_index[machine.data.name] = {}
         end
@@ -64,7 +65,7 @@
 
   script.on_event(
     defines.events.on_tick,--"Its HaNlDeR sHoUldNt InCluDe PeRfOrMaNce HeAvY CoDe." You can't tell me what to do.
-    function(event)
+    function()
       TFMG_thermal_core.thermal_update()
       TFMG_thermal_gui.on_gui_tick()
     end

@@ -8,3 +8,4 @@ TFMG_thermal_util = require("scripts.TFMG-thermal-util")
 --handles making my life easier by declaring a handfull of handy functions that I will only use once, but I will totally swear were worth making.
 require("scripts.on-events")
 --triggers various scripts based on events.
+require("scripts.TFMG-remote")

@@ -47,6 +47,7 @@ local TFMG_thermal_compound = {}
     storage.interfaces[machine.name][unit_number] = {
       machine = machine,
       interface = interface,
+      paused = false,--testing this concept
       --direction = machine.direction, --storing our orientation and mirroring.
       --mirroring = machine.mirroring,
     }

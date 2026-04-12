@@ -58,8 +58,10 @@ local TFMG_thermal_core = {}
   end
 
   function TFMG_thermal_core.thermal_update_machine(v,base_temperature_increase_per_tick,max_working_temp,max_safe_temp,delta_time,base_buffer_size)--Update an individual machine
-    if v.machine.valid == false then return end --If the machine isnt valid, don't run the script.
-    if v.interface.valid == false then return end --we'll probably need something to handle this.
+    if not v.machine.valid  then return end --If the machine isnt valid, don't run the script.
+    if not v.interface.valid then return end
+    if v.paused then return end
+
 		local temperature = v.interface.temperature
 		if v.machine.status == 1 then --if the machine is working, heat it up.
 			v.interface.temperature = temperature + (delta_time*base_temperature_increase_per_tick*(1 + v.machine.consumption_bonus))--This is the equation of doom. this is 90% of this mods performance cost.
@@ -72,10 +74,12 @@ local TFMG_thermal_core = {}
   end
 
   function TFMG_thermal_core.thermal_update_machine_disabled_heat(v,base_temperature_increase_per_tick,max_working_temp,max_safe_temp,delta_time,base_buffer_size)--This version of the script should still produce heat when machines are disabled by script.
-    if v.machine.valid == false then return end --If the machine isnt valid, don't run the script.
-    if v.interface.valid == false then return end
-    v.machine.disabled_by_script = false --We're gonna enable this machine here, so we can get the true status of the machine.
-    --game.print(v.machine.status)
+    if not v.machine.valid  then return end --If the machine isnt valid, don't run the script.
+    if not v.interface.valid then return end
+    if v.paused then return end
+
+    v.machine.disabled_by_script = false --We have to enable the machine to read its real status.
+
 		local temperature = v.interface.temperature
     if max_working_temp >= temperature then -- we need to check if this machine isnt overheated, since the no heat if its not working assumption no longer applies here.
 		  if v.machine.status == 1 then --if the machine is working, heat it up.
@@ -90,8 +94,11 @@ local TFMG_thermal_core = {}
   end
 
   function TFMG_thermal_core.thermal_update_thruster(v,temperature_increase_per_unit_fuel,max_working_temp,max_safe_temp,delta_time,fluid_1_type,fluid_2_type,fluid_1_min,fluid_2_min,fluid_1_max,fluid_2_max,min_consumption,max_consumption)
-    if v.machine.valid == false then return end --If the machine isnt valid, don't run the script.
-    if v.interface.valid == false then return end
+    --thruster script, is more complex because our heat production is based off the fuel burned. since thrusters dont consume energy like other machines.
+    if not v.machine.valid  then return end --If the machine isnt valid, don't run the script.
+    if not v.interface.valid then return end
+    if v.paused then return end
+
 		local temperature = v.interface.temperature
 		if v.machine.status == 1 then --if the machine is working, heat it up.
       local quality_multiplier = v.machine.quality.default_multiplier

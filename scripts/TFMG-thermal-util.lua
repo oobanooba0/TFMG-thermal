@@ -132,4 +132,59 @@ local TFMG_thermal_util = {}
     --game.print(serpent.block(game.players[1].undo_redo_stack.get_undo_item(1)))
   end
 
+  ---@param machine #can use unit number or a LuaEntity
+  ---| LuaEntity
+  ---| uint64
+  ---@return 
+  ---| table #A table containing a thermal interface and parent machine pair. Plus any associated data.
+  ---| nil
+  function TFMG_thermal_util.get_entry_from_machine(machine)
+
+    local interfaces = storage.interfaces
+    local name
+    local unit_number
+
+    local type = type(machine)
+    if type == "number" then
+      unit_number = machine
+      name = storage.registered_entities[unit_number]
+      if not name then return end
+    else
+      name = machine.name
+      unit_number = machine.unit_number
+    end
+
+    if not interfaces[name] then return end
+  return interfaces[name][unit_number] end
+
+
+  ---@param machine LuaEntity|uint64 #can use unit number or a LuaEntity
+  ---@param pause boolean #weather this entity should be paused or not.
+  function TFMG_thermal_util.set_interface_pause(machine,pause)
+    local entry = TFMG_thermal_util.get_entry_from_machine(machine)
+    if not entry then return end
+    entry.paused = pause
+  end
+
+  ---@param machine LuaEntity|uint64 #can use unit number or a LuaEntity
+  function TFMG_thermal_util.read_interface_pause(machine)
+    local entry = TFMG_thermal_util.get_entry_from_machine(machine)
+    if not entry then return end
+    if entry.paused == nil then entry.paused = false end
+  return entry.paused end
+
+  ---@param machine LuaEntity|uint64 #can use unit number or a LuaEntity
+  function TFMG_thermal_util.toggle_interface_pause(machine)
+    local entry = TFMG_thermal_util.get_entry_from_machine(machine)
+    if not entry then return end
+    if entry.paused == nil then entry.paused = false end
+    entry.paused = not entry.paused
+  return entry.paused end
+  
+
+
+
+
+
+
 return TFMG_thermal_util
