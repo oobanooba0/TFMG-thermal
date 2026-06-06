@@ -180,11 +180,6 @@ local TFMG_thermal_util = {}
     if entry.paused == nil then entry.paused = false end
     entry.paused = not entry.paused
   return entry.paused end
-  
-
-
-
-
 
 
 return TFMG_thermal_util

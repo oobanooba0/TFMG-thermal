@@ -26,6 +26,21 @@ for name,damage_type in pairs(data.raw["damage-type"]) do --generate our set of 
   end
 end
 
+--- Type default lookup
+local type_defaults = {
+  ["assembling-machine"] = {},
+  ["furnace"] = {},
+  ["lab"] = {},
+  ["beacon"] = {},
+  ["mining-drill"] = {},
+  ["thruster"] = {},
+  ["pump"] = {
+    --script_type = "pump",
+  },
+  ["offshore-pump"] = {
+    --script_type = "offshore-pump",
+  },
+}
 
 --Heat interface connection graphic definitions
   local disconnected_shift = 0.4
@@ -134,11 +149,12 @@ end
   return area end
 
   local function surface_condition_compare(surface,conditions)--this function fucks.
-  if not conditions then return true end -- if we dont have any surface conditions, we already know it will pass
-  if not surface.surface_properties then return true end
-    for _ , condition in pairs(conditions) do --checking each surface condition requirement, if any fail, we return false.
-      local surface_condition_value = surface.surface_properties[condition.property] or data.raw["surface-property"][condition.property].default_value
-      if condition.min > surface_condition_value or surface_condition_value > condition.max then return false end
+    if not conditions then return true end -- if we dont have any surface conditions, we already know it will pass
+    if not surface.surface_properties then return true end
+      for _ , condition in pairs(conditions) do --checking each surface condition requirement, if any fail, we return false.
+        local surface_condition_value = surface.surface_properties[condition.property] or data.raw["surface-property"][condition.property].default_value
+        if condition.min > surface_condition_value or surface_condition_value > condition.max then return false
+      end
     end
   return true end --if all conditions have passed, then we return true.
 
@@ -229,9 +245,9 @@ end
 
 --generate a thermal interfaces, and add it to data.raw
   --basic thermal interface.
-
   local function generate_thermal_interface(machine)
     if not machine.TFMG_thermal then return end -- Check if machine is opted into the thermal system.
+    local type = machine.type
     local style = machine.TFMG_thermal.graphics_set or "vanilla"
     if not connector_graphics[style] then log_thermal_interface_error("graphics style "..style.." does not exist.") end
     local specific_heat = calculate_specific_heat(machine)
@@ -290,7 +306,7 @@ end
     local default_temperature = 15
 
     local rotation_ruleset, rotation_ruleset_world = set_rotation_rules(machine) --rotation rulesets and such might have changed just now
-    local script_type = "crafting-machine"
+    local script_type = type_defaults[type].script_type or "crafting-machine"
     local heat_when_disabled = machine.TFMG_thermal.heat_when_disabled_by_script
 
     local machine_data = {--this information we take into runtime, since we need it for scripts or for gui.
@@ -458,3 +474,6 @@ end
   generate_thermal_interfaces(data.raw["beacon"])
   generate_thermal_interfaces(data.raw["mining-drill"])
   generate_thermal_interfaces_thruster(data.raw["thruster"])
+
+  generate_thermal_interfaces(data.raw["pump"])
+  generate_thermal_interfaces(data.raw["offshore-pump"])

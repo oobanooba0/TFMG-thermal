@@ -175,6 +175,8 @@ local TFMG_thermal_core = {}
           TFMG_thermal_core.thermal_update_thruster(v,temperature_increase_per_unit_fuel,max_working_temp,max_safe_temp,delta_time,fluid_1_type,fluid_2_type,fluid_1_min,fluid_2_min,fluid_1_max,fluid_2_max,min_consumption,max_consumption)
         end
       )
+    else
+      game.print("thermal prototype type "..thermal_prototype.type.." does not exist")
     end
   end
 

@@ -81,7 +81,7 @@ local TFMG_thermal_compound = {}
   		if v.interface.destroy() == true then
   		  storage.interfaces[machine_name][unit_number] = nil
         storage.registered_entities[unit_number] = nil --Clear the entry, as its irrelevant now
-        game.print("deconstruction"..unit_number)
+        --game.print("deconstruction"..unit_number)
       else
         game.print("destruction failed")
       end
@@ -190,7 +190,7 @@ local TFMG_thermal_compound = {}
     local parent_ghost = surface.find_entities_filtered({position = position, ghost_name = entity_name})
     if parent_ghost[1] then
       parent_ghost[1].tags = smuggled_data.bp_rotation --only god knows what the fuck this shit is doing. Wheres "TFMG" coming from? Why does it break if nest the table futher. regardless, since i have no bug reports yet, ill just ignore this shit.
-      game.print(serpent.block(parent_ghost[1].tags))
+      --game.print(serpent.block(parent_ghost[1].tags))
     return end
 
     --If this building was built instantly or was pasted over an existing building, then we expect there to already be an interface, and we can interact with that.
@@ -298,7 +298,7 @@ local TFMG_thermal_compound = {}
       if prototypes.entity[interface.parent_name].supports_direction then undo_needed = false break end
     end
 
-    game.print(serpent.block(undo_stack.get_undo_item(1)))
+    --game.print(serpent.block(undo_stack.get_undo_item(1)))
 
 
     if undo_needed then TFMG_thermal_util.generate_undo_item(player) game.print("undo created") end
