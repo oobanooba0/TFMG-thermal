@@ -14,7 +14,7 @@ data:extend({
   },
   {--Theres nothing particularly important about this recipe, it just acts as a way to get a radiator to operate forever.
     type = "recipe",
-    category = "radiator",
+    categories = {"radiator"},
     name = "TFMG-heat-radiation",
     icon = "__base__/graphics/icons/signal/signal-fire.png",
     energy_required = 100,
@@ -310,7 +310,8 @@ data:extend({
   },
 })
 
-  data.raw.tile ["space-platform-foundation"].collision_mask = {layers={ground_tile=true,platform=true}} -- necessary for the splatform collision mask to work.
+  data.raw.tile["space-platform-foundation"].collision_mask = {layers={ground_tile=true,platform=true}} -- necessary for the splatform collision mask to work.
+  
   local ground_radiator_item = data.raw.item["ground-radiator"]
   ground_radiator_item.weight = 20 * kg
 end

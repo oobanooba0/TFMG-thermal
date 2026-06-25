@@ -80,7 +80,7 @@ local type_defaults = {
       icon = "__base__/graphics/icons/signal/signal-fire.png",
       icon_size = 64,
     }}
-  local icon_size = machine.icon_size or defines.default_icon_size
+  local icon_size = machine.icon_size or defines.constant.default_icon_size
   if machine.icon then
     table.insert(icons,{
       icon = machine.icon,
