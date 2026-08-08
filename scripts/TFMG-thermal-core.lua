@@ -2,7 +2,6 @@
 local bplib = require("__bplib__.blueprint")
 local BlueprintBuild = bplib.BlueprintBuild
 local BlueprintSetup = bplib.BlueprintSetup
-local flib_table = require("__flib__/table")
 
 --rotation ruleset lookup table
   --R = Rotatable
@@ -144,14 +143,14 @@ local TFMG_thermal_core = {}
       local base_temperature_increase_per_tick = thermal_prototype.base_temperature_increase_per_tick --Precalculation rules.
       local base_buffer_size = (prototypes.entity[thermal_prototype.name].get_max_energy_usage())*(64/60)
       if thermal_prototype.heat_when_disabled_by_script then --we run the same damn script but like, a tiny bit different
-        storage.table_index[type] = flib_table.for_n_of(
+        storage.table_index[type] = TFMG_table.for_n(
         table,storage.table_index[type], update_budget,
         function(v)
           TFMG_thermal_core.thermal_update_machine_disabled_heat(v,base_temperature_increase_per_tick,max_working_temp,max_safe_temp,delta_time,base_buffer_size)
         end
       )
       else
-        storage.table_index[type] = flib_table.for_n_of(
+        storage.table_index[type] = TFMG_table.for_n(
           table,storage.table_index[type], update_budget,
           function(v)
             TFMG_thermal_core.thermal_update_machine(v,base_temperature_increase_per_tick,max_working_temp,max_safe_temp,delta_time,base_buffer_size)
@@ -169,7 +168,7 @@ local TFMG_thermal_core = {}
       local fluid_2_max = thermal_prototype.fluid_2_max
       local min_consumption = thermal_prototype.min_consumption
       local max_consumption = thermal_prototype.max_consumption
-      storage.table_index[type] = flib_table.for_n_of(
+      storage.table_index[type] = TFMG_table.for_n(
         table,storage.table_index[type], update_budget,
         function(v)
           TFMG_thermal_core.thermal_update_thruster(v,temperature_increase_per_unit_fuel,max_working_temp,max_safe_temp,delta_time,fluid_1_type,fluid_2_type,fluid_1_min,fluid_2_min,fluid_1_max,fluid_2_max,min_consumption,max_consumption)

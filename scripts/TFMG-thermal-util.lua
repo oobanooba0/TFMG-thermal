@@ -131,13 +131,6 @@ local TFMG_thermal_util = {}
     undo_proxy.rotate({by_player = player})
     --game.print(serpent.block(game.players[1].undo_redo_stack.get_undo_item(1)))
   end
-
-  ---@param machine #can use unit number or a LuaEntity
-  ---| LuaEntity
-  ---| uint64
-  ---@return 
-  ---| table #A table containing a thermal interface and parent machine pair. Plus any associated data.
-  ---| nil
   function TFMG_thermal_util.get_entry_from_machine(machine)
 
     local interfaces = storage.interfaces

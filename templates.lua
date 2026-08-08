@@ -1,3 +1,6 @@
+local number = 0 --I hate when i get red squigglies so this lol, ignore this line.
+
+
 --To apply the thermal system to a building you should include in its prototype.
 --Data stage Prototypes are the only thing you should need to deal with when creating thermal entites. Scripting is not required, the library can handle everything else automatically.
 
@@ -63,7 +66,7 @@ TFMG_thermal = {
   --heat when disabled by script determines weather the machine should still produce heat when disabled by script, this may be useful for compound entities like TFMGs supercomputer.
   --Note that this script still will automatically set machine status to enabled after a thermal tick. This is mostly a because I needed it more than anything.
   --default is false
-  heat_when_disabled_by_script = boolean, --true or false.
+  heat_when_disabled_by_script = number, --true or false.
 
 }
 

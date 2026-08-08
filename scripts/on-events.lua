@@ -1,4 +1,3 @@
-
 --setup events
 
   local function build_thermal_entity_filter()--set the build event filters. This has to be done after the build event has been registered.
