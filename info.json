@@ -6,7 +6,7 @@
   "factorio_version": "2.1",
   "dependencies": [
     "base >= 2.1.7",
-    "flib >= 0.16.5",
+    "TFMG-lib >= 0.5.1",
     "bplib >= 1.1.6",
     "?space-age"
   ],
