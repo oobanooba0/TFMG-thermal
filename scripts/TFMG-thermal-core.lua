@@ -1,7 +1,4 @@
 --this file contains the major components of the runtime scripting of TFMG Thermal. You should not have to interact with this in any way, though the functions can be called on the off chance they are useful to you.
-local bplib = require("__bplib__.blueprint")
-local BlueprintBuild = bplib.BlueprintBuild
-local BlueprintSetup = bplib.BlueprintSetup
 
 --rotation ruleset lookup table
   --R = Rotatable

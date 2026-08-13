@@ -1,6 +1,4 @@
-local bplib = require("__bplib__.blueprint")
-local BlueprintBuild = bplib.BlueprintBuild
-local BlueprintSetup = bplib.BlueprintSetup
+
 local TFMG_thermal_compound = {}
 
 ---basic build events
@@ -92,6 +90,20 @@ local TFMG_thermal_compound = {}
 --blueprint events
 
 --blueprint setup
+
+  function TFMG_thermal_compound.bplib_setup(event) --here goes everything
+
+    for bp_index, machine in pairs(event.entities) do
+      if TFMG_thermal_util.entity_has_thermal_rotations(machine) then
+
+        --how to handle ghosts?
+        --Does BP lib do that?
+        --god I am tired
+
+
+      end
+    end
+  end
   function TFMG_thermal_compound.bp_setup(event)
     --I dont fully understand bplib, but it is what it is.
     local bp_setup = BlueprintSetup:new(event)
@@ -225,7 +237,7 @@ local TFMG_thermal_compound = {}
     local modified_interfaces = {}
 
     for bp_index, bp_entity in pairs(bp_entities) do
-      if blueprint_entity_filter(bp_entity) and bp_entity.tags and bp_entity.tags.TFMG then
+      if TFMG_thermal_util.entity_has_thermal_rotations(bp_entity) and bp_entity.tags and bp_entity.tags.TFMG then
         local bp_location = bp_locations[bp_index]
         local modified_interface = blueprint_place_tag_handler(bp_entity,bp_transforms,bp_location,bp_build.surface)
         --game.print(serpent.block(modified_interface))

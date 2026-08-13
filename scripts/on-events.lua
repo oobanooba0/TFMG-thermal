@@ -156,6 +156,13 @@
       TFMG_thermal_compound.undo_redo_applied(event)
     end
   )
+--bplib events
+  script.on_event(
+    "bplib-extract",
+    function(event)
+      TFMG_thermal_compound.bplib_setup(event)
+    end
+  )
 
 --Sketchy Gui related events. Replace these later
 --"RePlaCe ThEsE LaTeR"

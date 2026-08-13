@@ -77,7 +77,7 @@ local type_defaults = {
 --icon graphic generation
   local function generate_thermal_interface_icons(machine) --handles the creation of an entity icon for the editor gui.
   local icons = {{--this is icon we're gonna use as a base.
-      icon = "__base__/graphics/icons/signal/signal-fire.png",
+      icon = "__base__/graphics/icons/signal/signal-fire.png",--my signal fire still burning I feel like I'm guided by my inner totem
       icon_size = 64,
     }}
   local icon_size = machine.icon_size or defines.constant.default_icon_size
@@ -189,7 +189,7 @@ local type_defaults = {
 
   local function build_and_check_surface_conditions(machine)--for the most part handles correcting any missing information in a surface condition table
     if not machine.TFMG_thermal.surface_conditions then return end
-    surface_conditions = {}
+    local surface_conditions = {}
     for _ , prototype_condition in pairs(machine.TFMG_thermal.surface_conditions) do
       if not prototype_condition.property then log_thermal_interface_error("a surface condition property must be specified to evaluate TFMG_thermal surface conditions. Check prototype:"..machine.name) return end
       local new_surface_condition = {
@@ -355,6 +355,13 @@ local type_defaults = {
         order = 255,
       })
     end
+    --register the machine with bplib
+    if not rotation_ruleset == "_01" then --if it doesn't rotate, theres no need to register with BP lib, since it has nothing to do.
+      data.raw["mod-data"]["bplib"].data.extract_entity_names[machine.name] = true
+      data.raw["mod-data"]["bplib"].data.position_entity_names[machine.name] = true
+      data.raw["mod-data"]["bplib"].data.overlap_entity_names[machine.name] = true
+    end
+
   end
 
 --generate thermal interfaces for thrusters. They cannot be rotated and lack many properties that crafting machines do.
@@ -364,7 +371,7 @@ local type_defaults = {
     local specific_heat = calculate_specific_heat(machine)
     local connections = generate_thermal_interface_connections(machine)
     local fluidboxes = generate_fluidboxes(connections,style)
-    machine.TFMG_thermal.surface_conditions = surface_conditions --what does this do?
+    --machine.TFMG_thermal.surface_conditions = surface_conditions surface conditions are irrelevant on a splatform
 
     local interface = {--machine interface template
       type = "assembling-machine",
@@ -451,6 +458,10 @@ local type_defaults = {
       value = {"TFMG-thermal.machine-output",tostring(heat_per_unit_fluid/1000)},
       order = 254,
     })
+    --register the machine with bplib
+    data.raw["mod-data"]["bplib"].data.extract_entity_names[machine.name] = true
+    data.raw["mod-data"]["bplib"].data.position_entity_names[machine.name] = true
+    data.raw["mod-data"]["bplib"].data.overlap_entity_names[machine.name] = true
   end
 ---go through all entities in a prototype category and run generate_thermal_interface for each of them.
   local function generate_thermal_interfaces(machines)

@@ -174,5 +174,10 @@ local TFMG_thermal_util = {}
     entry.paused = not entry.paused
   return entry.paused end
 
+  function TFMG_thermal_util.entity_has_thermal_rotations(entity)--checks the mod data to see if this entity has thermal rotations.
+  local entity_name = entity.name
+  if not prototypes.mod_data["TFMG-thermal-"..entity_name] then return false end
+  if prototypes.mod_data["TFMG-thermal-"..entity_name].data.rotation_ruleset == "_01" then return false end
+  return false end
 
 return TFMG_thermal_util
