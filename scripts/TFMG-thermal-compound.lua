@@ -92,58 +92,62 @@ local TFMG_thermal_compound = {}
 --blueprint setup
 
   function TFMG_thermal_compound.bplib_setup(event) --here goes everything
+    TFMG.block("blueprint setup event")
+    for bp_index, entity in pairs(event.entities) do
+      if TFMG_thermal_util.entity_has_thermal_rotations(entity) then --first check if the entity has rotations, if it doesnt, we dont need to bother with keeping data about it.
+        local interface_prototype
+        if entity.name == "entity-ghost" then
+          interface_prototype = prototypes.mod_data["TFMG-thermal-"..entity.ghost_name]
+        else
+          interface_prototype = prototypes.mod_data["TFMG-thermal-"..entity.name]
+        end
 
-    for bp_index, machine in pairs(event.entities) do
-      if TFMG_thermal_util.entity_has_thermal_rotations(machine) then
-
-        --how to handle ghosts?
-        --Does BP lib do that?
-        --god I am tired
-
-
+        if interface_prototype and storage.interfaces[entity.name] then
+          local v = storage.interfaces[entity.name][entity.unit_number]
+          if v then
+            event.blueprint.set_entity_tags(bp_index, {
+              TFMG = { direction = v.interface.direction, mirroring = v.interface.mirroring }
+            })
+          else
+            --theres no information to save so nothing to do
+          end
+        end
       end
     end
   end
-  function TFMG_thermal_compound.bp_setup(event)
-    --I dont fully understand bplib, but it is what it is.
-    local bp_setup = BlueprintSetup:new(event)
-  	if not bp_setup then return end
 
-  	-- Get a map from blueprint indices to world entities.
-  	local map = bp_setup:map_blueprint_indices_to_world_entities()
-  	if not map then return end
-
-    -- Check for any entities matching your custom entity
-  	for bp_index, machine in pairs(map) do
-      local interface_prototype --for every entity in the blueprint, we'll check if we have a thermal prototype associated with it.
-      --since the blueprint source entities may be ghosts, we need to account for that
-      if machine.name == "entity-ghost" then
-        interface_prototype = prototypes.mod_data["TFMG-thermal-"..machine.ghost_name]
-      else
-        interface_prototype = prototypes.mod_data["TFMG-thermal-"..machine.name]
-      end
-      --if we have an interface prototype, then we have work to do.
-      if interface_prototype and storage.interfaces[machine.name] then
-        --check if we have a storage entry for this entity (this implicitly checks surface conditions.)
-        local v = storage.interfaces[machine.name][machine.unit_number]
-        if v then --if we so have an interface here, we can use it.
-  			  bp_setup:apply_tags(bp_index, {
-            TFMG = { direction = v.interface.direction, mirroring = v.interface.mirroring }
-          })
-        else --Without an interface entry, we dont have an interface to source from. so we'll need to get more creative.
-          --for now, we'll try nothing.
-        end
-  		end
-  	end
-  end
-
-  ---@param bp_entity BlueprintEntity
-  local function blueprint_entity_filter(bp_entity)
-    local bp_entity_name = bp_entity.name
-    if not prototypes.mod_data["TFMG-thermal-"..bp_entity_name] then return false end --Check if we have a thermal system mod data entry corresponding to the entity, if not, our script can ignore this.
-    if prototypes.mod_data["TFMG-thermal-"..bp_entity_name].data.rotation_ruleset == "_01" then return false end --we dont need to do any blueprint stuff if our building shouldnt rotate.
-    return true
-  end
+--  function TFMG_thermal_compound.bp_setup(event)
+--    --I dont fully understand bplib, but it is what it is.
+--    local bp_setup = BlueprintSetup:new(event)
+--  	if not bp_setup then return end
+--
+--  	-- Get a map from blueprint indices to world entities.
+--  	local map = bp_setup:map_blueprint_indices_to_world_entities()
+--  	if not map then return end
+--
+--    -- Check for any entities matching your custom entity
+--  	for bp_index, machine in pairs(map) do
+--      local interface_prototype --for every entity in the blueprint, we'll check if we have a thermal prototype associated with it.
+--      --since the blueprint source entities may be ghosts, we need to account for that
+--      if machine.name == "entity-ghost" then
+--        interface_prototype = prototypes.mod_data["TFMG-thermal-"..machine.ghost_name]
+--      else
+--        interface_prototype = prototypes.mod_data["TFMG-thermal-"..machine.name]
+--      end
+--      --if we have an interface prototype, then we have work to do.
+--      if interface_prototype and storage.interfaces[machine.name] then
+--        --check if we have a storage entry for this entity (this implicitly checks surface conditions.)
+--        local v = storage.interfaces[machine.name][machine.unit_number]
+--        if v then --if we so have an interface here, we can use it.
+--  			  bp_setup:apply_tags(bp_index, {
+--            TFMG = { direction = v.interface.direction, mirroring = v.interface.mirroring }
+--          })
+--        else --Without an interface entry, we dont have an interface to source from. so we'll need to get more creative.
+--          --for now, we'll try nothing.
+--        end
+--  		end
+--  	end
+--  end
 
   --this should largely deal with entities that cant adopt their rotaiton from their parent entity. like beacons.
   local function blueprint_place_tag_handler(bp_entity,bp_transforms,bp_location,surface)
@@ -215,57 +219,65 @@ local TFMG_thermal_compound = {}
 
   --if you're copy pasting from surfaces that dont have thermal entities, to ones that do. Don't do that.
 
---blueprint placement events
-  function TFMG_thermal_compound.on_pre_build(event)
-    local bp_build = BlueprintBuild:new(event)
-    -- Will be `nil` if the event was not a blueprint build.
-  	if not bp_build then return end
+  --bp build event
+  function TFMG_thermal_compound.bplib_place(event)
+    local blueprint = event.blueprint -- this seems to be the key to the entity tags
 
-    local bp_entities = bp_build:get_entities() --[[@as BlueprintEntity[] ]]
-    if not bp_entities then return end --if a blueprint has no entities, then we should quit here.
-    local bp_locations = bp_build:map_blueprint_indices_to_world_positions()
 
-    local bp_transforms = {
-      bp_rotation = event.direction,
-      bp_flip_horizontal = event.flip_horizontal,
-      bp_flip_vertical = event.flip_vertical,
-    }
-    --game.print(bp_rotation..tostring(bp_flip_horizontal)..tostring(bp_flip_vertical))
-
-    --actions for every blueprinted entity.
-
-    local modified_interfaces = {}
-
-    for bp_index, bp_entity in pairs(bp_entities) do
-      if TFMG_thermal_util.entity_has_thermal_rotations(bp_entity) and bp_entity.tags and bp_entity.tags.TFMG then
-        local bp_location = bp_locations[bp_index]
-        local modified_interface = blueprint_place_tag_handler(bp_entity,bp_transforms,bp_location,bp_build.surface)
-        --game.print(serpent.block(modified_interface))
-        table.insert(modified_interfaces,modified_interface)
-      end
+    for bp_index, position in pairs(event.positions) do
+      local entity_tags = blueprint.get_blueprint_entity_tags(bp_index)
+      TFMG.block({
+        entity_tags,
+        blueprint.get_blueprint_entities()[bp_index]
+      })
     end
-
-    if not modified_interfaces[1] then return end
-
-    TFMG_thermal_util.subtick_trigger_abuse({
-      data_type = "undo-stack",
-      player_index = event.player_index,
-      modified_interfaces = modified_interfaces,
-    })
-
-    --ill need to handle the undo/redo stack somewhere around here.
-
-    --blueprint overbuild stuff
-
-    --through some stroke of luck or whatever, it seems I dont have to do anything special to buildings that are getting overplaced. The whole data smuggling trick from earlier actually seems to just, do that for me. nice.
-  	--local overlap_map = bp_build:map_blueprint_indices_to_overlapping_entities(blueprint_entity_filter)
-  	--if not overlap_map or (not next(overlap_map)) then return end
-  	---- Map blueprint tags on to the entities
-  	--for bp_index, entity in pairs(overlap_map) do
-  	--	local tags = bp_entities[bp_index].tags or {}
-  	--	blueprint_overbuild_handler(tags, entity)
-  	--end
   end
+
+
+--blueprint placement events
+--  function TFMG_thermal_compound.on_pre_build(event)
+--    local bp_build = BlueprintBuild:new(event)
+--    -- Will be `nil` if the event was not a blueprint build.
+--  	if not bp_build then return end
+--
+--    local bp_entities = bp_build:get_entities() --[[@as BlueprintEntity[] ]]
+--    if not bp_entities then return end --if a blueprint has no entities, then we should quit here.
+--    local bp_locations = bp_build:map_blueprint_indices_to_world_positions()
+--
+--    local bp_transforms = {
+--      bp_rotation = event.direction,
+--      bp_flip_horizontal = event.flip_horizontal,
+--      bp_flip_vertical = event.flip_vertical,
+--    }
+--    --game.print(bp_rotation..tostring(bp_flip_horizontal)..tostring(bp_flip_vertical))
+--
+--    --actions for every blueprinted entity.
+--
+--    local modified_interfaces = {}
+--
+--    for bp_index, bp_entity in pairs(bp_entities) do
+--      if TFMG_thermal_util.entity_has_thermal_rotations(bp_entity) and bp_entity.tags and bp_entity.tags.TFMG then
+--        local bp_location = bp_locations[bp_index]
+--        local modified_interface = blueprint_place_tag_handler(bp_entity,bp_transforms,bp_location,bp_build.surface)
+--        --game.print(serpent.block(modified_interface))
+--        table.insert(modified_interfaces,modified_interface)
+--      end
+--    end
+--
+--    if not modified_interfaces[1] then return end
+--
+--    TFMG_thermal_util.subtick_trigger_abuse({
+--      data_type = "undo-stack",
+--      player_index = event.player_index,
+--      modified_interfaces = modified_interfaces,
+--    })
+--    
+--    --ill need to handle the undo/redo stack somewhere around here.
+--
+--    --blueprint overbuild stuff
+--
+--    --through some stroke of luck or whatever, it seems I dont have to do anything special to buildings that are getting overplaced. The whole data smuggling trick from earlier actually seems to just, do that for me. nice.
+--  end
 
 --direct rotation handlers
   function TFMG_thermal_compound.handle_transform(event,transform) --note that the input event occurs before the game actually does anything.

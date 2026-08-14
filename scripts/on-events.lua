@@ -97,13 +97,13 @@
     end
   )
 
-  --on prebuild
-  script.on_event(
-    defines.events.on_pre_build,
-    function(event)
-      TFMG_thermal_compound.on_pre_build(event)
-    end
-  )
+--  --on prebuild
+--  script.on_event(
+--    defines.events.on_pre_build,
+--    function(event)
+--      TFMG_thermal_compound.on_pre_build(event)
+--    end
+--  )
 
 --destroy events
   script.on_event(
@@ -113,6 +113,29 @@
       TFMG_thermal_gui.gui_cleanup(event)
   	end
   )
+
+--blueprint setup event
+  --script.on_event(
+  --  defines.events.on_player_setup_blueprint,
+  --  function(event)
+  --    TFMG_thermal_compound.bp_setup(event)
+  --  end
+  --)
+  --bplib events
+  script.on_event(
+    "bplib-extract",
+    function(event)
+      TFMG_thermal_compound.bplib_setup(event)
+    end
+  )
+  script.on_event(
+    "bplib-positions",
+    function(event)
+      TFMG_thermal_compound.bplib_place(event)
+    end
+  )
+
+
 
 --rotate events
   script.on_event("interface-rotate",
@@ -136,13 +159,6 @@
     end
   )
 
---blueprint setup event
-  script.on_event(
-    defines.events.on_player_setup_blueprint,
-    function(event)
-      TFMG_thermal_compound.bp_setup(event)
-    end
-  )
 --undo/redo events
   script.on_event(
     defines.events.on_undo_applied,
@@ -156,13 +172,7 @@
       TFMG_thermal_compound.undo_redo_applied(event)
     end
   )
---bplib events
-  script.on_event(
-    "bplib-extract",
-    function(event)
-      TFMG_thermal_compound.bplib_setup(event)
-    end
-  )
+
 
 --Sketchy Gui related events. Replace these later
 --"RePlaCe ThEsE LaTeR"
