@@ -116,9 +116,9 @@ local TFMG_thermal_util = {}
     --heres the issue, i can create the undo action, but if i destroy the fish, the undo action goes with it.
     --fuck me am i right.
 
-	  local rn = script.register_on_object_destroyed(obj)
+	  local register_index = script.register_on_object_destroyed(obj)
     if not storage.smuggled_data then storage.smuggled_data = {} end
-    storage.smuggled_data[rn] = data
+    storage.smuggled_data[register_index] = data
     obj.destroy()
   end
 
@@ -175,9 +175,9 @@ local TFMG_thermal_util = {}
   return entry.paused end
 
   function TFMG_thermal_util.entity_has_thermal_rotations(entity)--checks the mod data to see if this entity has thermal rotations.
-  local entity_name = entity.name
-  if not prototypes.mod_data["TFMG-thermal-"..entity_name] then return false end
-  if prototypes.mod_data["TFMG-thermal-"..entity_name].data.rotation_ruleset == "_01" then return false end
-  return false end
+    local entity_name = entity.name
+    if not prototypes.mod_data["TFMG-thermal-"..entity_name] then return false end
+    if prototypes.mod_data["TFMG-thermal-"..entity_name].data.rotation_ruleset == "_01" then return false end
+  return true end
 
 return TFMG_thermal_util

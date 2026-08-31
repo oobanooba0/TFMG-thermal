@@ -92,8 +92,8 @@ end
 
 function TFMG_thermal_gui.on_gui_tick()
 	local players = game.connected_players
-  for _ , v in pairs(players) do
-		local gui_storage = storage.players[v.index].gui
+  for _ , player in pairs(players) do
+		local gui_storage = storage.players[player.index].gui
 		if gui_storage ~= nil and gui_storage.gui ~= nil and gui_storage.gui.valid == true and gui_storage.gui_interface ~= nil and gui_storage.gui_interface.interface.valid == true then --holy stack batman
 			local interface = gui_storage.gui_interface
 			local max_working_temperature = gui_storage.max_working_temperature

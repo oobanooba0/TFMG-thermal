@@ -291,6 +291,7 @@ local type_defaults = {
       },
       fluid_boxes = fluidboxes,
       fluid_boxes_off_when_no_fluid_recipe = false,
+      use_mirroring = true
     }
     --We're looking at an entirely new setup to generate the heat connections with the correct setup
     if feature_flags["space_travel"] then interface.surface_conditions = surface_conditions end
@@ -356,7 +357,7 @@ local type_defaults = {
       })
     end
     --register the machine with bplib
-    if not rotation_ruleset == "_01" then --if it doesn't rotate, theres no need to register with BP lib, since it has nothing to do.
+    if rotation_ruleset ~= "_01" then --if it doesn't rotate, theres no need to register with BP lib, since it has nothing to do.
       data.raw["mod-data"]["bplib"].data.extract_entity_names[machine.name] = true
       data.raw["mod-data"]["bplib"].data.position_entity_names[machine.name] = true
       data.raw["mod-data"]["bplib"].data.overlap_entity_names[machine.name] = true
@@ -404,6 +405,7 @@ local type_defaults = {
       },
       fluid_boxes = fluidboxes,
       fluid_boxes_off_when_no_fluid_recipe = false,
+      use_mirroring = true
     }
     data:extend({interface})
     
@@ -458,10 +460,7 @@ local type_defaults = {
       value = {"TFMG-thermal.machine-output",tostring(heat_per_unit_fluid/1000)},
       order = 254,
     })
-    --register the machine with bplib
-    data.raw["mod-data"]["bplib"].data.extract_entity_names[machine.name] = true
-    data.raw["mod-data"]["bplib"].data.position_entity_names[machine.name] = true
-    data.raw["mod-data"]["bplib"].data.overlap_entity_names[machine.name] = true
+    --no need to register with bplib because thrusters dont rotate.
   end
 ---go through all entities in a prototype category and run generate_thermal_interface for each of them.
   local function generate_thermal_interfaces(machines)

@@ -97,13 +97,13 @@
     end
   )
 
---  --on prebuild
---  script.on_event(
---    defines.events.on_pre_build,
---    function(event)
---      TFMG_thermal_compound.on_pre_build(event)
---    end
---  )
+  --on prebuild
+  --script.on_event(
+  --  defines.events.on_pre_build,
+  --  function(event)
+  --    TFMG_thermal_compound.on_pre_build(event)
+  --  end
+  --)
 
 --destroy events
   script.on_event(
@@ -122,16 +122,16 @@
   --  end
   --)
   --bplib events
-  script.on_event(
+  script.on_event(--player creates a blueprint
     "bplib-extract",
     function(event)
       TFMG_thermal_compound.bplib_setup(event)
     end
   )
-  script.on_event(
+  script.on_event(--player places a blueprint and it includes an entity registered with bp lib
     "bplib-positions",
     function(event)
-      TFMG_thermal_compound.bplib_place(event)
+      TFMG_thermal_compound.bplib_positions(event)
     end
   )
 
