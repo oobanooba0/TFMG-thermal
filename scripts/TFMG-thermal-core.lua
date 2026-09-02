@@ -55,7 +55,9 @@ local TFMG_thermal_core = {}
 
   function TFMG_thermal_core.thermal_update_machine(v,base_temperature_increase_per_tick,max_working_temp,max_safe_temp,delta_time,base_buffer_size)--Update an individual machine
     if not v.machine.valid  then return end --If the machine isnt valid, don't run the script.
-    if not v.interface.valid then return end
+    if not v.interface.valid then 
+      TFMG_thermal_compound.regenerate_interface(v)
+      return end
     if v.paused then return end
 
 		local temperature = v.interface.temperature
@@ -71,7 +73,9 @@ local TFMG_thermal_core = {}
 
   function TFMG_thermal_core.thermal_update_machine_disabled_heat(v,base_temperature_increase_per_tick,max_working_temp,max_safe_temp,delta_time,base_buffer_size)--This version of the script should still produce heat when machines are disabled by script.
     if not v.machine.valid  then return end --If the machine isnt valid, don't run the script.
-    if not v.interface.valid then return end
+    if not v.interface.valid then 
+      TFMG_thermal_compound.regenerate_interface(v)
+      return end
     if v.paused then return end
 
     v.machine.disabled_by_script = false --We have to enable the machine to read its real status.
@@ -92,7 +96,9 @@ local TFMG_thermal_core = {}
   function TFMG_thermal_core.thermal_update_thruster(v,temperature_increase_per_unit_fuel,max_working_temp,max_safe_temp,delta_time,fluid_1_type,fluid_2_type,fluid_1_min,fluid_2_min,fluid_1_max,fluid_2_max,min_consumption,max_consumption)
     --thruster script, is more complex because our heat production is based off the fuel burned. since thrusters dont consume energy like other machines.
     if not v.machine.valid  then return end --If the machine isnt valid, don't run the script.
-    if not v.interface.valid then return end
+    if not v.interface.valid then
+      TFMG_thermal_compound.regenerate_interface(v)
+      return end
     if v.paused then return end
 
 		local temperature = v.interface.temperature

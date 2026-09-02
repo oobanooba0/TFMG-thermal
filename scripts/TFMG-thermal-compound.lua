@@ -384,4 +384,16 @@ local TFMG_thermal_compound = {}
     end
   end
 
+  function TFMG_thermal_compound.regenerate_interface(v)
+    local fake_event = {
+      entity = v.machine
+    }
+    TFMG_thermal_compound.handle_build_event(fake_event)
+
+    TFMG.block({
+      "TFMG-thermal: regenerated thermal interface, if you're playing TFMG, you should really just start a new save, and is mostly a bandaid to try not to break your save. Please check the regenerated interface, since it may still be broken.",
+      v.machine
+    })
+  end
+
 return TFMG_thermal_compound
