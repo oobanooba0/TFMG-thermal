@@ -90,25 +90,30 @@ function TFMG_thermal_gui.gui_cleanup(event)
 	end
 end
 
-function TFMG_thermal_gui.on_gui_tick()
+function TFMG_thermal_gui.on_gui_tick() --this code is severely in need of rework.
 	local players = game.connected_players
   for _ , player in pairs(players) do
+		--shit ton of validity checks
+		if not storage.players then return end
+		if not storage.players[player.index] then return end
 		local gui_storage = storage.players[player.index].gui
-		if gui_storage ~= nil and gui_storage.gui ~= nil and gui_storage.gui.valid == true and gui_storage.gui_interface ~= nil and gui_storage.gui_interface.interface.valid == true then --holy stack batman
-			local interface = gui_storage.gui_interface
-			local max_working_temperature = gui_storage.max_working_temperature
-			local max_safe_temperature = gui_storage.max_safe_temperature
-			local temperature = interface.interface.temperature
-			local energy_multiplier = interface.machine.consumption_bonus + 1
-			local heat_output = (gui_storage.base_heat_output * energy_multiplier)/1000000
+		if not gui_storage then return end
+		if not gui_storage.gui.valid then return end
+		if not gui_storage.gui_interface.valid then return end
 
-			gui_storage.gui["1"]["temperature-reading"].caption = {"thermal-gui.temperature-reading",string.format("%.2f",temperature)}
-			gui_storage.gui["1"]["heat-bar"].value = temperature/max_working_temperature
-			gui_storage.gui["1"]["heat-bar2"].value = (temperature-max_working_temperature)/(max_safe_temperature-max_working_temperature)
-			gui_storage.gui["heating"].caption = {"thermal-gui.heating",string.format("%.2f",heat_output)} 
-			gui_storage.gui["working"].caption = {"thermal-gui.working",max_working_temperature}
-			gui_storage.gui["damage"].caption = {"thermal-gui.damage",max_safe_temperature}
-		end
+		local interface = gui_storage.gui_interface
+		local max_working_temperature = gui_storage.max_working_temperature
+		local max_safe_temperature = gui_storage.max_safe_temperature
+		local temperature = interface.interface.temperature
+		local energy_multiplier = interface.machine.consumption_bonus + 1
+		local heat_output = (gui_storage.base_heat_output * energy_multiplier)/1000000
+
+		gui_storage.gui["1"]["temperature-reading"].caption = {"thermal-gui.temperature-reading",string.format("%.2f",temperature)}
+		gui_storage.gui["1"]["heat-bar"].value = temperature/max_working_temperature
+		gui_storage.gui["1"]["heat-bar2"].value = (temperature-max_working_temperature)/(max_safe_temperature-max_working_temperature)
+		gui_storage.gui["heating"].caption = {"thermal-gui.heating",string.format("%.2f",heat_output)} 
+		gui_storage.gui["working"].caption = {"thermal-gui.working",max_working_temperature}
+		gui_storage.gui["damage"].caption = {"thermal-gui.damage",max_safe_temperature}
 	end
 end
 
