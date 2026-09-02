@@ -8,9 +8,13 @@ data:extend({
     type = "recipe-category",
     name = "radiator"
   },
+  {
+    type = "recipe-category",
+    name = "nothing"
+  },
   {--Theres nothing particularly important about this recipe, it just acts as a way to get a radiator to operate forever.
     type = "recipe",
-    category = "radiator",
+    categories = {"radiator"},
     name = "TFMG-heat-radiation",
     icon = "__base__/graphics/icons/signal/signal-fire.png",
     energy_required = 100,
@@ -19,9 +23,9 @@ data:extend({
     ingredients = {},
     results = {},
   },
-  {--blueprint building proxy entity. Used to make blueprint building work.
+  {--used to generate undo entries
     type = "simple-entity-with-owner",
-    name = "TFMG-thermal-bp-proxy",
+    name = "TFMG-thermal-undo-redo-proxy",
     icon = "__base__/graphics/icons/signal/signal-fire.png",
     --picture makes this visible for debug purposes.
     --picture = {
@@ -179,6 +183,7 @@ data:extend({
         { variation = 18, main_offset = util.by_pixel(10, 5), shadow_offset = util.by_pixel(35, 31), show_shadow = true }
       }
     )
+
 if feature_flags["space_travel"] then
 --space radiator 
   --graphics helpers.
@@ -305,7 +310,8 @@ data:extend({
   },
 })
 
-  data.raw.tile ["space-platform-foundation"].collision_mask = {layers={ground_tile=true,platform=true}} -- necessary for the splatform collision mask to work.
+  data.raw.tile["space-platform-foundation"].collision_mask = {layers={ground_tile=true,platform=true}} -- necessary for the splatform collision mask to work.
+  
   local ground_radiator_item = data.raw.item["ground-radiator"]
   ground_radiator_item.weight = 20 * kg
 end
