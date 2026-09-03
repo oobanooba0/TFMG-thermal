@@ -1,12 +1,12 @@
 {
   "name": "TFMG-thermal",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "title": "TFMG: Thermal Lib",
   "author": "oobanooba",
   "factorio_version": "2.1",
   "dependencies": [
     "base >= 2.1.7",
-    "TFMG-lib >= 0.5.1",
+    "TFMG-lib >= 0.5.2",
     "bplib >= 1.1.6",
     "?space-age"
   ],
