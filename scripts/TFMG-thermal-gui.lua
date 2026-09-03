@@ -76,7 +76,7 @@ function TFMG_thermal_gui.gui_close(event)
 	if gui_storage.gui == nil then return end
 	if gui_storage.gui.valid == false then return end
 	gui_storage.gui.destroy()
-	gui_storage = nil
+	storage.players[event.player_index].gui = nil
 end
 
 function TFMG_thermal_gui.gui_cleanup(event)
@@ -97,9 +97,9 @@ function TFMG_thermal_gui.on_gui_tick() --this code is severely in need of rewor
 		if not storage.players then return end
 		if not storage.players[player.index] then return end
 		local gui_storage = storage.players[player.index].gui
-		if not gui_storage then return end
+		if gui_storage == nil then return end
 		if not gui_storage.gui.valid then return end
-		if not gui_storage.gui_interface.valid then return end
+		if not gui_storage.gui_interface.interface.valid then return end
 
 		local interface = gui_storage.gui_interface
 		local max_working_temperature = gui_storage.max_working_temperature
