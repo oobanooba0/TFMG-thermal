@@ -97,7 +97,8 @@ function TFMG_thermal_gui.on_gui_tick() --this code is severely in need of rewor
 		if not storage.players then return end
 		if not storage.players[player.index] then return end
 		local gui_storage = storage.players[player.index].gui
-		if gui_storage == nil then return end
+		if not gui_storage then return end
+		if not gui_storage.gui then return end
 		if not gui_storage.gui.valid then return end
 		if not gui_storage.gui_interface.interface.valid then return end
 
