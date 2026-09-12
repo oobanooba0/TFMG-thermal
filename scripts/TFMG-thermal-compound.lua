@@ -340,7 +340,7 @@ local TFMG_thermal_compound = {}
     --game.print(serpent.block(undo_stack.get_undo_item(1)))
 
 
-    if undo_needed then TFMG_thermal_util.generate_undo_item(player) game.print("undo created") end
+    if undo_needed then TFMG_thermal_util.generate_undo_item(player) end
 
     undo_stack.set_undo_tag(1,1,"TFMG_thermal",smuggled_data.modified_interfaces)
     --game.print(serpent.block(undo_stack.get_undo_item(1)))
