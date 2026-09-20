@@ -1,4 +1,9 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.5.6
+Date: 2026-09-20
+  Changes:
+    - Tempoarily removed all thermal support for pumps and offshore pumps, It was experemental, and some mods are blindly adding interfaces to these entities which is causing problems.
+---------------------------------------------------------------------------------------------------
 Version: 0.5.5
 Date: 2026-09-15
   Bugfixes:

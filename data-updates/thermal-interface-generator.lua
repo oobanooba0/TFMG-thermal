@@ -485,5 +485,5 @@ local type_defaults = {
   generate_thermal_interfaces(data.raw["mining-drill"])
   generate_thermal_interfaces_thruster(data.raw["thruster"])
 
-  generate_thermal_interfaces(data.raw["pump"])
-  generate_thermal_interfaces(data.raw["offshore-pump"])
+  --generate_thermal_interfaces(data.raw["pump"])
+  --generate_thermal_interfaces(data.raw["offshore-pump"])
