@@ -66,6 +66,7 @@ data:extend({
     circuit_connector = circuit_connector_definitions["assembling-machine"],
     collision_box = {{-1.2, -1.2}, {1.2, 1.2}},
     selection_box = {{-1.5, -1.5}, {1.5, 1.5}},
+    use_mirroring = true,
     open_sound = sounds.machine_open,
     close_sound = sounds.machine_close,
     impact_category = "metal",
