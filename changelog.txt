@@ -1,6 +1,6 @@
 ---------------------------------------------------------------------------------------------------
 Version: 0.5.8
-Date: ????
+Date: 2026-10-28
   Features:
     - quota_cost added, quota cost affects how many updates a machine gets relative to normal. Advanced shit right here.
   Changes:
