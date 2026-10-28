@@ -127,19 +127,23 @@ local TFMG_thermal_core = {}
     if not prototypes.mod_data["TFMG-thermal-"..type] then
       game.print("previously-existing-thermal-entity"..type.." no longer exists. Deleting related storage tables.") 
       storage.interfaces[type] = nil
-      return end
+    return end
+
     local thermal_prototype = prototypes.mod_data["TFMG-thermal-"..type].data
     local max_working_temp = thermal_prototype.max_working_temperature
     local max_safe_temp = thermal_prototype.max_safe_temperature
+    local quota_cost = thermal_prototype.quota_cost --how much an update for this category costs in terms of update quota. Higher number means less updates for this machine.
     
     --game.print(category_size)
     local category_size = table_size(table)
-    local update_budget = settings.global["update-quota"].value*(category_size/registered_entities_size)
-    local delta_time = category_size/update_budget
+    local update_quota = settings.global["update-quota"].value
+    local update_budget = update_quota*(category_size/registered_entities_size)
+    local cost_adusted_budget = math.max(1, update_budget/quota_cost) --adjusting the budget based on the machines individual quota cost
+    local delta_time = category_size/cost_adusted_budget
     if delta_time < 1 then--if update budget is bigger than table size, you will get a delta time of 1, but if table size is larger than budget, then delta time increases.
       delta_time = 1
     end
-    --game.print("TFMG-thermal-"..type..":"..update_budget.." "..delta_time) -- update distribution debug checker
+    --game.print("TFMG-thermal-"..type.." CategorySize:"..category_size.." UBudget:"..update_budget.." AdjustedUBudget:"..cost_adusted_budget.." DT:"..delta_time) -- update distribution debug checker
 
     if thermal_prototype.type == "crafting-machine" then --We're gonna chose which thermal calculation function to use based on the machine type.
       --get these values only once, since they should remain the same across all instances of the machine.
@@ -147,19 +151,20 @@ local TFMG_thermal_core = {}
       local base_buffer_size = (prototypes.entity[thermal_prototype.name].get_max_energy_usage())*(64/60)
       if thermal_prototype.heat_when_disabled_by_script then --we run the same damn script but like, a tiny bit different
         storage.table_index[type] = TFMG_table.for_n(
-        table,storage.table_index[type], update_budget,
+        table,storage.table_index[type], cost_adusted_budget,
         function(v)
           TFMG_thermal_core.thermal_update_machine_disabled_heat(v,base_temperature_increase_per_tick,max_working_temp,max_safe_temp,delta_time,base_buffer_size)
         end
       )
       else
         storage.table_index[type] = TFMG_table.for_n(
-          table,storage.table_index[type], update_budget,
+          table,storage.table_index[type], cost_adusted_budget,
           function(v)
             TFMG_thermal_core.thermal_update_machine(v,base_temperature_increase_per_tick,max_working_temp,max_safe_temp,delta_time,base_buffer_size)
           end
         )
       end
+
     elseif thermal_prototype.type == "thruster" then -- for thrusters, which need a wholly different thermal script.
       --get these values only once, since theyre reused for each instance of the thruster.
       local temperature_increase_per_unit_fuel = thermal_prototype.temperature_increase_per_unit_fuel
@@ -171,8 +176,9 @@ local TFMG_thermal_core = {}
       local fluid_2_max = thermal_prototype.fluid_2_max
       local min_consumption = thermal_prototype.min_consumption
       local max_consumption = thermal_prototype.max_consumption
+
       storage.table_index[type] = TFMG_table.for_n(
-        table,storage.table_index[type], update_budget,
+        table,storage.table_index[type], cost_adusted_budget,
         function(v)
           TFMG_thermal_core.thermal_update_thruster(v,temperature_increase_per_unit_fuel,max_working_temp,max_safe_temp,delta_time,fluid_1_type,fluid_2_type,fluid_1_min,fluid_2_min,fluid_1_max,fluid_2_max,min_consumption,max_consumption)
         end

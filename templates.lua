@@ -66,7 +66,11 @@ TFMG_thermal = {
   --heat when disabled by script determines weather the machine should still produce heat when disabled by script, this may be useful for compound entities like TFMGs supercomputer.
   --Note that this script still will automatically set machine status to enabled after a thermal tick. This is mostly a because I needed it more than anything.
   --default is false
-  heat_when_disabled_by_script = number, --true or false.
+  heat_when_disabled_by_script = true, --true or false.
+
+  --quota cost determines how many tick updates this machine will get relative to others. Don't touch unless you know what this actually means.
+  --default is 1
+  quota_cost = number,
 
 }
 
@@ -102,6 +106,11 @@ TFMG_thermal = {
   --if a thruster uses 50 fuel and 50 oxidizer per second, and generates 100kJ per unit fluid, then it will output 10MW of heat energy.
   --default is "100kJ"
   heat_per_unit_fluid = "energy-value",
+
+  --quota cost determines how many tick updates this machine will get relative to others. Don't touch unless you know what this actually means.
+  --default is 5
+  quota_cost = number,
+
 }
 
 

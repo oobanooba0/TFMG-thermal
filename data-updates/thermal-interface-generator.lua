@@ -105,6 +105,7 @@ local type_defaults = {
 
 --Generate the initial heat pipe connections for the north varient of the machine, either from a connection set prototype, or by generating one from scratch
   local function generate_thermal_interface_connections(machine)
+    local connections
     if not machine.TFMG_thermal.connections then -- if no connections are defined, we shall generate one automagically
       --We're gonna find the coordinates of the center of the x most, and y most tiles of the collision box.
       local machine_box = machine.collision_box
@@ -131,6 +132,32 @@ local type_defaults = {
       if y_max - y_min > 0 then--same for the east and west sides.
       table.insert(connections,{ position = {x_max, y_max}, direction = 4 })
       table.insert(connections,{ position = {x_min, y_min}, direction = 12 })
+      end
+
+    else connections = machine.TFMG_thermal.connections end --Else use the connection set defined in the entity prototype.
+  return connections end
+
+  local function generate_thermal_interface_connections_thruster(machine)
+    local connections
+    if not machine.TFMG_thermal.connections then -- if no connections are defined, we shall generate one automagically
+      --We're gonna find the coordinates of the center of the x most, and y most tiles of the collision box.
+      local machine_box = machine.collision_box
+      local x_max = semifloor(machine_box[2][1])
+      local x_min = semiceil(machine_box[1][1])
+      local y_max = semifloor(machine_box[2][2])
+      local y_min = semiceil(machine_box[1][2])
+
+      --basically the same process as generating for normal machines, but we only bother with the top connections.
+
+      connections = {
+        { position = {x_min, y_min}, direction = 0 },
+      }
+      if x_max - x_min > 0 then--if our north and south side length is large enough then we add our second corner connetions.
+      table.insert(connections,{ position = {x_max, y_min}, direction = 0 })
+      end
+      if y_max - y_min > 2 then--if our east adn west side lengths is longer than 2, we can place connections 1 down from the top edge
+      table.insert(connections,{ position = {x_max, y_min + 1}, direction = 4 })
+      table.insert(connections,{ position = {x_min, y_min + 1}, direction = 12 })
       end
 
     else connections = machine.TFMG_thermal.connections end --Else use the connection set defined in the entity prototype.
@@ -305,6 +332,7 @@ local type_defaults = {
     local base_heat_output = energy_usage_per_tick*heat_ratio*60--in W
     local base_temperature_increase_per_tick = (energy_usage_per_tick*heat_ratio)/(specific_heat)--precalculate the per tick base heat output of the machine. That way we don't need to calculate it in runtime.
     local default_temperature = 15
+    local default_quota_cost = 1
 
     local rotation_ruleset, rotation_ruleset_world = set_rotation_rules(machine) --rotation rulesets and such might have changed just now
     local script_type = type_defaults[type].script_type or "crafting-machine"
@@ -328,6 +356,7 @@ local type_defaults = {
         rotation_ruleset_world = rotation_ruleset_world,
         surface_conditions = surface_conditions,
         specific_heat = (specific_heat/1000000).."MJ",
+        quota_cost = machine.TFMG_thermal.quota_cost or default_quota_cost,
       }
     }
     data:extend({machine_data})
@@ -370,7 +399,7 @@ local type_defaults = {
     if not machine.TFMG_thermal then return end -- Check if machine is opted into the thermal system.
     local style = machine.TFMG_thermal.style or "vanilla"
     local specific_heat = calculate_specific_heat(machine)
-    local connections = generate_thermal_interface_connections(machine)
+    local connections = generate_thermal_interface_connections_thruster(machine)
     local fluidboxes = generate_fluidboxes(connections,style)
     --machine.TFMG_thermal.surface_conditions = surface_conditions surface conditions are irrelevant on a splatform
 
@@ -415,6 +444,7 @@ local type_defaults = {
     local heat_per_unit_fluid = util.parse_energy(machine.TFMG_thermal.heat_per_unit_fluid or "100kJ")
     local temperature_increase_per_unit_fuel = (heat_per_unit_fluid/specific_heat)*2
     local default_temperature = 15
+    local default_quota_cost = 5
 
     local machine_data = {--this information we take into runtime, since we need it for scripts or for gui.
       type = "mod-data",
@@ -439,6 +469,7 @@ local type_defaults = {
         fluid_2_max = machine.oxidizer_fluid_box.volume*machine.max_performance.fluid_volume,
         fluid_1_type = machine.fuel_fluid_box.filter,
         fluid_2_type = machine.oxidizer_fluid_box.filter,
+        quota_cost = machine.TFMG_thermal.quota_cost or default_quota_cost
       }
     }
     data:extend({machine_data})
