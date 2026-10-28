@@ -1,4 +1,14 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.5.8
+Date: ????
+  Features:
+    - quota_cost added, quota cost affects how many updates a machine gets relative to normal. Advanced shit right here.
+  Changes:
+    - Lowered default update quota to 1000, its probably fine, much lower performance impact
+    - Thrusters now have a default quota_cost of 5, meaning thrusters get updated less often relative to other machines, which is good for performance. (its less precise but thrusters generally behave mostly predictably so nothing crazy should happen)
+  Bugfixes:
+    - Default thruster connection layout isnt broken anymore.
+---------------------------------------------------------------------------------------------------
 Version: 0.5.7
 Date: 2026-09-22
   Bugfixes:
